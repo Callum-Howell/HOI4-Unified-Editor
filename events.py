@@ -135,6 +135,7 @@ class event():
             elif substatement.tag == "immediate":
                 self.immediate = substatement.values[0]
 
+
         self.create_raw_text()
 
     def create_raw_text(self):

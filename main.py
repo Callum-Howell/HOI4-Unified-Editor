@@ -297,15 +297,20 @@ class eventinfodisplay():
         self.picturedisplayframe.grid(row=0, column=1, sticky="NSEW")
 
         photostr = event.picture[4:]
-        photoloc = (app.mod.directory + "\gfx\event_pictures\\" + photostr + ".dds")
-        raweventphoto = Image.open(photoloc)
-        displayphoto = ImageTk.PhotoImage(raweventphoto)
+        if photostr + ".dds" in os.listdir(app.mod.directory + "\gfx\event_pictures\\"):
+            photoloc = (app.mod.directory + "\gfx\event_pictures\\" + photostr + ".dds")
+            raweventphoto = Image.open(photoloc)
+            displayphoto = ImageTk.PhotoImage(raweventphoto)
 
-        self.photolabel = tkinter.Label(self.picturedisplayframe, image=displayphoto, background="black")
-        self.photolabel.image = displayphoto
-        self.photolabel.grid(row=0, column=0)
+            self.photolabel = tkinter.Label(self.picturedisplayframe, image=displayphoto, background="black")
+            self.photolabel.image = displayphoto
+            self.photolabel.grid(row=0, column=0)
 
-        self.picframe = evardisplayframe(self.picturedisplayframe, "Picture", event.picture, 1)
+        else:
+            self.photolabel = tkinter.Label(self.picturedisplayframe, text="Picture Not Found")
+            self.photolabel.grid()
+
+            self.picframe = evardisplayframe(self.picturedisplayframe, "Picture", event.picture, 1)
 
         #### Triggers Display
 

@@ -5,7 +5,7 @@ import csv
 
 class parsingfile():
     def __init__(self, inputstring):
-        commentexpression = re.compile("#.+")
+        commentexpression = re.compile("#.*")
 
 ### Comment Remover
 
@@ -20,8 +20,10 @@ class parsingfile():
         for char in self.processedstring:
             if char == "\t" or char == "\n":
                 detabbed += " "
-            elif char == "{" or char == "}" or char == "=" or char == "<" or char == ">":
+            elif char == "{" or char == "}" or char == "=" or char == "<" or char == ">" or char == '"':
                 detabbed += (" " + char + " ")
+
+
             else:
                 detabbed += char
 
@@ -125,9 +127,43 @@ def nestify(blocklist):
         elif (block != "{" or block != "}") and nesting == 0:
             newlist.append(block)
 
-    nestedlist =[]
+    stringed_list = []
+    string_concatenate = False
+    expect_quote = False
+    newstring = ""
 
     for block in newlist:
+        if string_concatenate == False:
+            if block == r'"':
+                string_concatenate = True
+            else:
+                stringed_list.append(block)
+
+        elif string_concatenate == True:
+            if block == r'"' and expect_quote == False:
+                string_concatenate = False
+                stringed_list.append(newstring)
+                newstring = ""
+
+            elif block == r'"' and expect_quote == True:
+                expect_quote = False
+                newstring += block
+
+            elif block == "\\":
+                expect_quote = True
+                newstring += block
+
+            else:
+                if len(newstring) == 0:
+                    newstring += block
+
+                else:
+                    newstring += " " + block
+
+
+    nestedlist =[]
+
+    for block in stringed_list:
         if type(block) != list:
             nestedlist.append(block)
 
@@ -190,6 +226,7 @@ class nestable():
         else:
             for substatement in value:
                 if type(substatement) == statement:
+#                    print(substatement, substatement.tag, substatement.values)
                     if substatement.tag in SCOPE_TEMPLATE_DICT:
                         self.values.append(scope(substatement.tag, substatement.evaluator, substatement.values, SCOPE_TEMPLATE_DICT[substatement.tag]))
                     elif substatement.tag in COMMAND_TEMPLATE_DICT:
