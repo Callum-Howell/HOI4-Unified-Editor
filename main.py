@@ -43,7 +43,7 @@ class app:
         self.mainwindow.destroy()
         self.mainwindow = tkinter.Frame(self.master)
         self.mainwindow.grid()
-        eventdisplayinstance = eventdisplay(self.mainwindow, self)
+        eventdisplayinstance = event_editor_frame(self.mainwindow, self, self.mod.eventfileslist)
 
     def generatecountrydisplay(self):
         self.mainwindow.destroy()
@@ -90,7 +90,7 @@ class editor_frame:
     def __init__(self, main_window, app, infolist, identifier):
         self.mainwindow = main_window
         self.app = app
-        self.opsbar = opsbar(self, self.mainwindow, self.app, infolist, identifier)
+        self.opsbar = ops_bar(self, self.mainwindow, self.app, infolist, identifier)
 
     def load(self, ideology_choice):
         del self.info_display
@@ -139,7 +139,7 @@ class country_editor_frame(editor_frame):
         self.infodisplay = country_info_frame(self.info_frame, self.app, selectedcountry)
 
 
-class opsbar:
+class ops_bar:
     def __init__(self, master_object, displayframe, app, choice_source, ident_attr):
         self.app = app
         self.opsframe = tkinter.Frame(displayframe)
@@ -155,97 +155,62 @@ class opsbar:
         self.selector.insert(0, vallist[0])
         self.selector.grid(row=0, column=0)
 
-        self.loadbutton = tkinter.Button(self.opsframe, text="Load", command=self.loadchoice)
+        self.loadbutton = tkinter.Button(self.opsframe, text="Load", command=self.load_choice)
         self.loadbutton.grid(row=0, column=1)
 
-    def loadchoice(self):
+    def load_choice(self):
         choice = self.selector.get()
         self.master_object.load(choice)
+
+    def get(self):
+        return self.selector.get()
 
 
 class country_info_frame:
     def __init__(self, displayframe, app, countrychoice):
-        self.countrynotebook = tkinter.ttk.Notebook(displayframe)
-        self.countrynotebook.grid()
+        self.country_notebook = tkinter.ttk.Notebook(displayframe)
+        self.country_notebook.grid()
 
-        self.maininfoframe = tkinter.Frame(self.countrynotebook)
-        self.countrynotebook.add(self.maininfoframe, text="Main")
-        self.examplelabel = tkinter.Label(self.maininfoframe, text=countrychoice.tag)
-        self.examplelabel.grid()
+        self.main_info_frame = tkinter.Frame(self.countrynotebook)
+        self.countrynotebook.add(self.main_info_frame, text="Main")
+        self.example_label = tkinter.Label(self.main_info_frame, text=countrychoice.tag)
+        self.example_label.grid()
 
         # Tech Display
 
-        self.techframe = tkinter.Frame(self.countrynotebook)
-        self.countrynotebook.add(self.techframe, text="Technologies")
+        self.tech_frame = tkinter.Frame(self.countrynotebook)
+        self.countrynotebook.add(self.tech_frame, text="Technologies")
 
         # Leader Display
 
-        self.leaderframe = tkinter.Frame(self.countrynotebook)
-        self.countrynotebook.add(self.leaderframe, text="Leaders")
+        self.leader_frame = tkinter.Frame(self.countrynotebook)
+        self.countrynotebook.add(self.leader_frame, text="Leaders")
 
         # OOB Display
 
-        self.oobframe = tkinter.Frame(self.countrynotebook)
-        self.countrynotebook.add(self.oobframe, text="OOB")
+        self.oob_frame = tkinter.Frame(self.countrynotebook)
+        self.countrynotebook.add(self.oob_frame, text="OOB")
 
 
-class eventdisplay:
-    def __init__(self, mainwindow, app):
+class event_editor_frame(editor_frame):
+    def __init__(self, mainwindow, app, mod_event_files_list):
+        super().__init__(mainwindow, app, mod_event_files_list, "name")
         self.app = app
         self.mainwindow = mainwindow
-        self.opsinstance = eventopsbar(self.mainwindow, app, self)
 
-        self.varsubframe = tkinter.Frame(self.mainwindow)
-        self.varsubframe.grid(row=1, column=0)
+        self.sub_display_frame = tkinter.Frame(self.mainwindow)
+        self.sub_display_frame.grid(row=1, column=0)
 
-        self.eventselectorinstance = event_selector_box(self.varsubframe, app, self, self.getloadedfile())
-        self.eventinfoinstance = event_info_frame(self.varsubframe, self.getloadedfile().event_list[0], self.app)
+        self.info_frame = event_file_info_frame(self.sub_display_frame, mod_event_files_list[0], self.app)
 
-    def getloadedfile(self):
-        loadedfile = self.opsinstance.returnfile()
-        for eventfile in self.app.mod.eventfileslist:
-            if eventfile.name == loadedfile:
-                return eventfile
-
-    def loadneweventfile(self):
-        self.varsubframe.destroy()
-        self.varsubframe = tkinter.Frame(self.mainwindow)
-        self.varsubframe.grid(row=1, column=0)
-
-        self.eventselectorinstance = event_selector_box(self.varsubframe, app, self, self.getloadedfile())
-        self.eventinfoinstance = event_info_frame(self.varsubframe, self.getloadedfile().eventlist[0], self.app)
-
-    def loadinfo(self, event):
-        self.varsubframe.destroy()
-        self.varsubframe = tkinter.Frame(self.mainwindow)
-        self.varsubframe.grid(row=1, column=0)
-
-        self.eventselectorinstance = event_selector_box(self.varsubframe, app, self, self.getloadedfile())
-        self.eventinfoinstance = event_info_frame(self.varsubframe, event, self.app)
-
-
-class eventopsbar:
-    def __init__(self, master, app, eventdisplay):
-        eventopsframe = tkinter.Frame(master)
-        eventopsframe.grid(row=0, column=0, sticky="W")
-
-        eventboxlabel = tkinter.Label(eventopsframe, text="Event File:")
-        eventboxlabel.grid(row=0, column=0)
-
-        vallist = []
-        for eventfile in app.mod.eventfileslist:
-            vallist.append(eventfile.name)
-
-        self.selectedfile = tkinter.StringVar()
-        self.fileselector = ttk.Combobox(eventopsframe, values=vallist, textvariable=self.selectedfile)
-        self.fileselector.set(vallist[0])
-        self.fileselector.grid(row=0, column=1)
-
-        loadbutton = tkinter.Button(eventopsframe, text="Load", command=eventdisplay.loadneweventfile)
-        loadbutton.grid(row=0, column=2)
-
-    def returnfile(self):
-        return self.fileselector.get()
+    def load(self, choice):
+        self.info_frame.destroy()
+        self.info_frame = tkinter.Frame(self.mainwindow)
+        self.info_frame.grid(row=1, column=0)
+        for event_file in self.app.mod.eventfileslist:
+            if event_file.tag == choice:
+                selected_event_file = event_file
+        self.infodisplay = event_file_info_frame(self.info_frame, selected_event_file, self.app)
 
 
 class event_selector_box:
@@ -257,7 +222,6 @@ class event_selector_box:
 
         eventlistlabel = tkinter.Label(eventselectorframe, text="Event List")
         eventlistlabel.grid(row=0, column=0)
-
         buttoncount = 1
         for event in eventfile.event_list:
             newbutton = event_button(eventselectorframe, event, buttoncount, eventdisplay)
@@ -275,10 +239,14 @@ class event_button:
         self.evtdisplay.loadinfo(self.event)
 
 
-class event_info_frame:
-    def __init__(self, master, event, app):
+class event_file_info_frame:
+    def __init__(self, master, event_file, app):
+
+        self.event_selector = event_selector_box(master, app, master, event_file)
+
         self.app = app
-        self.event = event
+        self.event_file = event_file
+        self.event = event_file.event_list[0]
 
         self.eventnotebook = tkinter.ttk.Notebook(master)
         self.eventnotebook.grid(row=0, column=1)
@@ -289,16 +257,16 @@ class event_info_frame:
         self.infopanels = tkinter.Frame(self.infodisplayframe, relief="groove", bd=3)
         self.infopanels.grid(row=0, column=0, sticky="NSEW")
 
-        self.idframe = event_var_display_frame(self.infopanels, "ID", event.id, 0)
-        self.titleframe = event_var_display_frame(self.infopanels, "Title", event.title, 1)
-        self.descframe = event_var_display_frame(self.infopanels, "Description", event.desc[0].text, 2)
+        self.idframe = event_var_display_frame(self.infopanels, "ID", self.event.id, 0)
+        self.titleframe = event_var_display_frame(self.infopanels, "Title", self.event.title, 1)
+        self.descframe = event_var_display_frame(self.infopanels, "Description", self.event.desc[0].text, 2)
 
         # Photo Display
 
         self.picturedisplayframe = tkinter.Frame(self.infodisplayframe, relief="groove", bd=3)
         self.picturedisplayframe.grid(row=0, column=1, sticky="NSEW")
 
-        photostr = event.picture[4:]
+        photostr = self.event.picture[4:]
         if photostr + ".dds" in os.listdir(app.mod.directory + "\gfx\event_pictures\\"):
             photoloc = (app.mod.directory + "\gfx\event_pictures\\" + photostr + ".dds")
             raweventphoto = Image.open(photoloc)
@@ -312,7 +280,7 @@ class event_info_frame:
             self.photolabel = tkinter.Label(self.picturedisplayframe, text="Picture Not Found")
             self.photolabel.grid()
 
-            self.picframe = event_var_display_frame(self.picturedisplayframe, "Picture", event.picture, 1)
+            self.picframe = event_var_display_frame(self.picturedisplayframe, "Picture", self.event.picture, 1)
 
         # Triggers Display
 
@@ -325,7 +293,7 @@ class event_info_frame:
         self.triggered_only_button.grid(row=0, column=0)
         self.triggered_only_button.deselect()
 
-        if event.triggeredonce == True:
+        if self.event.triggeredonce == True:
             self.triggered_only_button.select()
 
         self.triggers_display_container = tkinter.Frame(self.triggers_edit_page)
@@ -344,7 +312,7 @@ class event_info_frame:
         self.option_box_container.grid(row=1, column=0)
 
         self.options_boxes = []
-        for option in event.options:
+        for option in self.event.options:
             self.options_boxes.append(option_box(option, self.option_box_container, len(self.options_boxes)))
 
         self.eventnotebook.add(self.options_edit_page, text="Options")
@@ -354,12 +322,12 @@ class event_info_frame:
         self.loceditpage = tkinter.Frame(self.eventnotebook)
         self.eventnotebook.add(self.loceditpage, text="Localisations")
 
-        keycounter = [event.title]
+        keycounter = [self.event.title]
 
-        for desc in event.desc:
+        for desc in self.event.desc:
             keycounter.append(desc.text)
 
-        for option in event.options:
+        for option in self.event.options:
             keycounter.append(option.name)
 
         self.titleLocEdit = localisation_editor(self.loceditpage, keycounter, app)
@@ -370,7 +338,7 @@ class event_info_frame:
         self.eventnotebook.add(self.rawtextpage, text="Raw Text")
 
         self.rawtextedit = tkinter.Text(self.rawtextpage, width=100)
-        self.rawtextedit.insert(0.0, event.rawtext)
+        self.rawtextedit.insert(0.0, self.event.rawtext)
         self.rawtextedit.grid()
 
     def titleeditor(self):
