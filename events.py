@@ -6,20 +6,23 @@ from hoi4parser import *
 
 ###classes
 
-class eventfile():
-    def __init__(self, eventfile, filename):
+class event_file():
+    def __init__(self, event_txt_file, filename):
         self.name = filename
-        self.parsedfile = parsingfile(eventfile)
+        self.parsed_file = parsingfile(event_txt_file)
 
-        self.namespaces = []
-        self.eventlist = []
+        self.name_spaces = []
+        self.event_list = []
 
-        for statement in self.parsedfile.statements:
+        for statement in self.parsed_file.statements:
             if statement.tag == "add_namespace":
-                self.namespaces.append(statement.values[0])
+                self.name_spaces.append(statement.values[0])
 
             elif statement.tag == "country_event" or statement.tag == "news_event" or statement.tag == "unit_leader_event" or statement.tag == "state_event":
-                self.eventlist.append(event(statement))
+                self.event_list.append(event(statement))
+
+    def __len__(self):
+        return len(self.event_list)
 
 
 # class eventfile():
@@ -164,6 +167,7 @@ class event():
     def export(self):
         self.create_raw_text()
         return self.rawtext
+
 
 
 # class event():
