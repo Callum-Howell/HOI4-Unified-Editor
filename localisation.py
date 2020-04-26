@@ -25,10 +25,3 @@ class localisationfile():
 #        print(self.file_lang)
 
 #####
-
-#def test():
-#    fileopener = open("factions_l_english.yml", "r", encoding="utf-8")
-#    filereader = fileopener.read()
-#    return filereader
-#
-#testobject = localisationfile(test())

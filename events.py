@@ -92,10 +92,10 @@ class event():
         self.triggers = []
         self.mtth = "Not Specified"
         self.fireonlyonce = "Not Specified"
-        self.triggeredonce = "Not Specified"
+        self.triggeredonce = False
         self.timeout = "Not Specified"
         self.fireforsender = "Not Specified"
-        self.hidden = "Not Specified"
+        self.hidden = False
         self.exclusive = "Not Specified"
         self.major = "Not Specified"
         self.showmajor = "Not Specified"
@@ -113,19 +113,32 @@ class event():
             elif substatement.tag == "option":
                 self.options.append(option(substatement))
             elif substatement.tag == "trigger":
-                self.triggers.append(substatement)
+                for trigger_statement in substatement.values:
+                    if trigger_statement == None:
+                        pass
+
+                    elif trigger_statement.tag in TRIGGER_TEMPLATE_DICT:
+                        self.triggers.append(trigger(trigger_statement.tag,
+                                                     trigger_statement.values,
+                                                     trigger_statement.evaluator,
+                                                     TRIGGER_TEMPLATE_DICT[trigger_statement]))
+                    else:
+                        self.triggers.append(nestable(trigger_statement.tag, trigger_statement.values, trigger_statement.evaluator))
+
             elif substatement.tag == "mean_time_to_happen":
                 self.mtth = substatement.values[0]
             elif substatement.tag == "fire_only_once":
                 self.fireonlyonce = substatement.values[0]
             elif substatement.tag == "is_triggered_only":
-                self.triggeredonce = substatement.values[0]
+                if substatement.values[0] == "yes":
+                    self.triggeredonce = True
             elif substatement.tag == "timeout_days":
                 self.timeout = substatement.values[0]
             elif substatement.tag == "fire_for_sender":
                 self.fireforsender = substatement.values[0]
             elif substatement.tag == "hidden":
-                self.hidden = substatement.values[0]
+                if substatement.values[0] == "yes":
+                    self.hidden = True
             elif substatement.tag == "exclusive":
                 self.exclusive = substatement.values[0]
             elif substatement.tag == "major":
@@ -254,6 +267,7 @@ class option():
         self.ai_chance = []
         self.effects = []
         self.empty_hidden = False
+        self.original_recipient_only = False
 
         for substatement in inputstatement.values:
             if substatement is None:
@@ -263,9 +277,12 @@ class option():
                 if substatement.tag == "name":
                     self.name = substatement.values[0]
 
+                elif substatement.tag == "original_recipient_only":
+                    self.original_recipient_only = True
+
                 elif substatement.tag == "ai_chance":
                     for sub_nestable in substatement.values:
-                        self.ai_chance.append(nestable(substatement.tag, substatement.evaluator, substatement.values, None))
+                        self.ai_chance.append(nestable(substatement.tag, substatement.evaluator, substatement.values))
 
                 elif substatement.tag in SCOPE_TEMPLATE_DICT:
                     self.effects.append(scope(substatement.tag, substatement.evaluator, substatement.values, SCOPE_TEMPLATE_DICT[substatement.tag]))
@@ -279,7 +296,8 @@ class option():
                 elif substatement.tag in COMMAND_TEMPLATE_DICT:
                     self.effects.append(command(substatement.tag, substatement.evaluator, substatement.values, COMMAND_TEMPLATE_DICT[substatement.tag]))
                 else:
-                    self.effects.append(nestable(substatement.tag, substatement.evaluator, substatement.values, None))
+                    self.effects.append(nestable(substatement.tag, substatement.evaluator, substatement.values))
+
 
 
 

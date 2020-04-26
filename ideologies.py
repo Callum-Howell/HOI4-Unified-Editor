@@ -83,5 +83,3 @@ class modifier():
 
 #### Test
 
-# teststr = open("C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV\common\ideologies\\00_ideologies.txt", encoding="utf-8")
-# testfile = ideologyfile(teststr.read())

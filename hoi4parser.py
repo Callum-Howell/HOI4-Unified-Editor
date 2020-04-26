@@ -215,10 +215,10 @@ class modifier_template():
         self.usage = usage
 
 class nestable():
-    def __init__(self, tag, evaluator, value, template):
+    def __init__(self, tag, evaluator, value):
         self.tag = tag
         self.values = []
-        self.template = template
+        self.evaluator = evaluator
 
         if len(value) == 1:
             self.values.append(value)
@@ -236,7 +236,7 @@ class nestable():
                     elif substatement.tag in MODIFIER_TEMPLATE_DICT:
                         self.values.append(modifier(substatement.tag, substatement.evaluator, substatement.values, MODIFIER_TEMPLATE_DICT[substatement.tag]))
                     else:
-                        self.values.append(nestable(substatement.tag, substatement.evaluator, substatement.values, None))
+                        self.values.append(nestable(substatement.tag, substatement.evaluator, substatement.values))
 
                 else:
                     self.values.append(substatement)
@@ -247,19 +247,23 @@ class nestable():
 
 class scope(nestable):
     def __init__(self, tag, value, evaluator, template):
-        super().__init__(tag, value, evaluator, template)
+        super().__init__(tag, value, evaluator)
+        self.template = template
 
 class trigger(nestable):
     def __init__(self, tag, value, evaluator, template):
-        super().__init__(tag, value, evaluator, template)
+        super().__init__(tag, value, evaluator)
+        self.template = template
 
 class command(nestable):
     def __init__(self, tag, value, evaluator, template):
-        super().__init__(tag, value, evaluator, template)
+        super().__init__(tag, value, evaluator)
+        self.template = template
 
 class modifier(nestable):
     def __init__(self, tag, value, evaluator, template):
-        super().__init__(tag, value, evaluator, template)
+        super().__init__(tag, value, evaluator)
+        self.template = template
 
 SCOPE_TEMPLATE_DICT = {}
 COMMAND_TEMPLATE_DICT = {}

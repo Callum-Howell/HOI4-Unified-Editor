@@ -50,13 +50,13 @@ class app():
         self.mainwindow.destroy()
         self.mainwindow = tkinter.Frame(self.master)
         self.mainwindow.grid()
-        countrydisplayinstance = country_display(self.mainwindow, self)
+        countrydisplayinstance = country_editor_frame(self.mainwindow, self, self.mod.countrylist)
 
     def generate_ideology_display(self):
         self.mainwindow.destroy()
         self.mainwindow = tkinter.Frame(self.master)
         self.mainwindow.grid()
-        ideologydisplayinstance = ideology_display(self.mainwindow, self)
+        ideologydisplayinstance = ideology_editor_frame(self.mainwindow, self, self.mod.ideology_list)
 
     def addmenus(self):
         self.mainmenubar = tkinter.Menu(self.master)
@@ -87,14 +87,26 @@ class app():
         self.master.config(menu=self.mainmenubar)
 
 
-class ideology_display():
-    def __init__(self, mainwindow, app):
+class editor_frame():
+    def __init__(self, mainwindow, app, infolist, identifier):
         self.mainwindow = mainwindow
         self.app = app
+        self.opsbar = opsbar(self, self.mainwindow, self.app, infolist, identifier)
 
-        self.opsbar = opsbar(self.mainwindow, self.app, self.app.mod.ideology_list, "name")
-
+    def load(self, ideology_choice):
+        del (self.info_display)
         self.info_display = ideology_info(self.mainwindow, self.app, self.opsbar.selector.get())
+
+class base_info_display():
+    def __init__(self, infoframe, app, selection):
+        self.infoframe = tkinter.Frame(infoframe)
+        self.infoframe.grid(row=1, column=0, sticky="NSEW")
+
+class ideology_editor_frame(editor_frame):
+    def __init__(self, mainwindow, app, ideology_list):
+        super().__init__(mainwindow, app, ideology_list, "name")
+        self.info_display = ideology_info(self.mainwindow, self.app, self.opsbar.selector.get())
+
 
 
 
@@ -110,28 +122,22 @@ class ideology_info():
         self.i_namedisplay = evardisplayframe(self.infoframe, "Name", selected_ideology.name, 0)
 
 
-class country_display():
-    def __init__(self, mainwindow, app):
-        self.mainwindow = mainwindow
-        self.app = app
+class country_editor_frame(editor_frame):
+    def __init__(self, mainwindow, app, country_list):
+        super().__init__(mainwindow, app, country_list, "tag")
 
-        self.countrydisplayframe = tkinter.Frame(mainwindow)
-        self.countrydisplayframe.grid()
-
-        self.opsbar = opsbar(self, self.countrydisplayframe, self.app, self.app.mod.countrylist, "tag")
-
-        self.infoframe = tkinter.Frame(self.countrydisplayframe)
-        self.infoframe.grid(row=1, column=0)
-        self.infodisplay = self.load(self.opsbar.selector.get())
+        self.info_frame = tkinter.Frame(self.mainwindow)
+        self.info_frame.grid(row=1, column=0)
+        self.info_display = self.load(self.opsbar.selector.get())
 
     def load(self, choice):
-        self.infoframe.destroy()
-        self.infoframe = tkinter.Frame(self.countrydisplayframe)
-        self.infoframe.grid(row=1, column=0)
+        self.info_frame.destroy()
+        self.info_frame = tkinter.Frame(self.mainwindow)
+        self.info_frame.grid(row=1, column=0)
         for country in self.app.mod.countrylist:
             if country.tag == choice:
                 selectedcountry = country
-        self.infodisplay = countryinfodisplay(self.infoframe, self.app, selectedcountry)
+        self.infodisplay = country_info_frame(self.info_frame, self.app, selectedcountry)
 
 
 class opsbar():
@@ -158,7 +164,7 @@ class opsbar():
         self.master_object.load(choice)
 
 
-class countryinfodisplay():
+class country_info_frame():
     def __init__(self, displayframe, app, countrychoice):
         self.countrynotebook = tkinter.ttk.Notebook(displayframe)
         self.countrynotebook.grid()
@@ -286,10 +292,7 @@ class eventinfodisplay():
 
         self.idframe = evardisplayframe(self.infopanels, "ID", event.id, 0)
         self.titleframe = evardisplayframe(self.infopanels, "Title", event.title, 1)
-
         self.descframe = evardisplayframe(self.infopanels, "Description", event.desc[0].text, 2)
-
-        self.mtthframe = evardisplayframe(self.infopanels, "Mean Time to Happen", event.mtth, 3)
 
         #### Photo Display
 
@@ -314,19 +317,38 @@ class eventinfodisplay():
 
         #### Triggers Display
 
-        self.triggerframe = tkinter.Frame(self.infodisplayframe, relief="groove", bd=3)
-        self.triggerframe.grid(row=1, column=0, sticky="NSEW")
+        self.triggers_edit_page = tkinter.Frame(self.eventnotebook)
 
-        self.triggeredbutton = tkinter.Radiobutton(self.triggerframe, text="Is Triggered Only")
-        self.triggeredbutton.grid(row=0, column=0)
+        self.triggers_settings_box = tkinter.Frame(self.triggers_edit_page)
+        self.triggers_settings_box.grid(row=0, column=0)
+
+        self.triggered_only_button = tkinter.Checkbutton(self.triggers_settings_box, text="Triggered Only?")
+        self.triggered_only_button.grid(row=0, column=0)
+        self.triggered_only_button.deselect()
+
+        if event.triggeredonce == True:
+            self.triggered_only_button.select()
+
+        self.triggers_display_container = tkinter.Frame(self.triggers_edit_page)
+        self.triggers_display_container.grid(row=1, column=0)
+
+        self.eventnotebook.add(self.triggers_edit_page, text= "Triggers")
 
         #### Options Display
 
-        self.optionsframe = tkinter.Frame(self.infodisplayframe, relief="groove", bd=3)
-        self.optionsframe.grid(row=1, column=1, sticky="NSEW")
+        self.options_edit_page = tkinter.Frame(self.eventnotebook)
 
-        self.templabel = tkinter.Label(self.optionsframe, text="OPTIONS GO HERE")
-        self.templabel.grid()
+        self.option_settings_box = tkinter.Frame(self.options_edit_page)
+        self.option_settings_box.grid(row=0, column=0)
+
+        self.option_box_container = tkinter.Frame(self.options_edit_page)
+        self.option_box_container.grid(row=1, column=0)
+
+        self.options_boxes = []
+        for option in event.options:
+            self.options_boxes.append(option_box(option, self.option_box_container, len(self.options_boxes)))
+
+        self.eventnotebook.add(self.options_edit_page, text="Options")
 
         ### Locedit Page
 
@@ -337,6 +359,9 @@ class eventinfodisplay():
 
         for desc in event.desc:
             keycounter.append(desc.text)
+
+        for option in event.options:
+            keycounter.append(option.name)
 
         self.titleLocEdit = loceditor(self.loceditpage, keycounter, app)
 
@@ -352,6 +377,29 @@ class eventinfodisplay():
     def titleeditor(self):
         titleeditdialog = loceditor(self.event.title, self.app)
 
+class option_box():
+    def __init__(self, input_option, master_frame, ordinal):
+        self.individ_option_frame = tkinter.Frame(master_frame, relief="groove", bd=3 )
+        self.individ_option_frame.grid(row=ordinal, column=0)
+
+        self.namelabel = tkinter.Label(self.individ_option_frame, text="Name:")
+        self.namelabel.grid(row=0, column=0)
+
+        self.option_name = input_option.name
+
+        self.name_insert_box = tkinter.Entry(self.individ_option_frame, textvariable=self.option_name)
+        self.name_insert_box.insert(0, input_option.name)
+        self.name_insert_box.grid(row=0, column=1)
+
+        self.ai_factor_label = tkinter.Label(self.individ_option_frame, text="AI Factor:")
+        self.ai_factor_label.grid(row=1, column=0)
+
+        self.ai_factor_name = input_option.ai_chance
+
+        self.ai_factor_insert_box = tkinter.Entry(self.individ_option_frame, textvariable=self.ai_factor_name)
+        self.ai_factor_insert_box.insert(0, input_option.ai_chance)
+        self.ai_factor_insert_box.grid(row=1, column=1)
+
 
 class evardisplayframe():
     def __init__(self, master, varname, initvalue, order, *additional_widgets):
@@ -366,7 +414,7 @@ class evardisplayframe():
         self.entrybox.grid(row=0, column=1, sticky="E")
 
 
-# noinspection PyTypeChecker
+
 class loceditor():
     def __init__(self, master, keys, app):
         self.loceditdialog = tkinter.Frame(master)
