@@ -226,7 +226,6 @@ class nestable():
         else:
             for substatement in value:
                 if type(substatement) == statement:
-#                    print(substatement, substatement.tag, substatement.values)
                     if substatement.tag in SCOPE_TEMPLATE_DICT:
                         self.values.append(scope(substatement.tag, substatement.evaluator, substatement.values, SCOPE_TEMPLATE_DICT[substatement.tag]))
                     elif substatement.tag in COMMAND_TEMPLATE_DICT:
@@ -241,9 +240,24 @@ class nestable():
                 else:
                     self.values.append(substatement)
 
+    def __repr__(self):
+        return self.export()
 
-    def subnest(self):
-        pass
+    def export(self):
+        exportstr = ""
+
+        exportstr += self.tag + " " + self.evaluator + " "
+
+        for value in self.values:
+            if len(self.values) == 1 and type(value) is not nestable:
+                exportstr += value
+
+            elif type(value) == nestable:
+                value.export()
+
+            else:
+                pass
+
 
 class scope(nestable):
     def __init__(self, tag, value, evaluator, template):

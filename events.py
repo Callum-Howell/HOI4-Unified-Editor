@@ -132,6 +132,12 @@ class event():
                 self.rawtext += "\t" + line
             self.rawtext += "\t\n"
 
+        for desc in self.desc:
+            desc_text = desc.export()
+            for line in desc_text.splitlines():
+                self.rawtext += "\t" + line
+            self.rawtext += "\t\n"
+
         if self.picture != "Not Specified":
             self.rawtext += "\tpicture = " + self.picture + "\n"
 
@@ -139,7 +145,7 @@ class event():
             self.rawtext += "\tfire_only_once = yes\n"
 
         if self.triggered_only != False:
-            self.rawtext += "\tis_trigerred_only = yes\n"
+            self.rawtext += "\tis_triggered_only = yes\n"
 
         if self.timeout != "Not Specified":
             self.rawtext += "\ttimeout_days = " + self.timeout + "\n"
@@ -168,103 +174,6 @@ class event():
     def export(self):
         self.create_raw_text()
         return self.rawtext
-
-
-
-# class event():
-#     def __init__(self, inputstring, eventtype):
-#         self.rawtext = eventtype + inputstring
-#         idexpression = re.compile("id=.+")
-#         titleexpression = re.compile("title=.+")
-#         descexpression = re.compile("desc=.+")
-#         pictureexpression = re.compile("picture=.+")
-#         optionsexpression = re.compile("option=")
-#         triggerexpression = re.compile("trigger=.+")
-#         mtthexpression = re.compile("mean_time_to_happen=.+")
-#         fireonceexpression = re.compile("fire_only_once=.+")
-#
-#         triggeredonlyexpression = re.compile("is_triggered_only.+")
-#         timeoutexpression = re.compile("timeout_days=.+")
-#         fireforsenderexpression = re.compile("fire_for_sender=.+")
-#
-#         hiddenexpression = re.compile("hidden=.+")
-#         exclusiveexpression = re.compile("exclusive=.+")
-#         majorexpression = re.compile("major=.+")
-#         showmajorexpression = re.compile("show_major=.+")
-#         immediateexpression =  re.compile("immediate=.+")
-#
-#         try:
-#             self.id = idexpression.search(inputstring).group()[3:]
-#         except:
-#             self.id = "Null"
-#         try:
-#             self.title = titleexpression.search(inputstring).group()[6:]
-#         except:
-#             self.title = "Null"
-#
-#
-#         self.desc = []
-#         desciter = descexpression.finditer(inputstring)
-#         for descrun in desciter:
-#             descslice = hierarchyslice(inputstring, descrun.end())
-#             self.desc.append(description(descslice))
-#
-#         try:
-#             self.picture = pictureexpression.search(inputstring).group()[12:]
-#         except:
-#             self.picture = "Null"
-#
-#         try:
-#             self.trigger = trigger(hierarchyslice(inputstring, triggerexpression.search(inputstring).end()))
-#         except:
-#             self.trigger = "Null"
-#
-#         try:
-#             self.mtth = mtthexpression.search(inputstring).group()
-#         except:
-#             self.mtth = "Null"
-#         try:
-#             self.fireonlyonce = fireonceexpression.search(inputstring).group()
-#         except:
-#             self.fireonlyonce = "Null"
-#         try:
-#             self.triggeredonce = triggeredonlyexpression.search(inputstring).group()
-#         except:
-#             self.triggeredonce = "Null"
-#         try:
-#             self.timeout = timeoutexpression.search(inputstring).group()
-#         except:
-#             self.timeout = "Null"
-#         try:
-#             self.fireforsender = fireforsenderexpression.search(inputstring).group()
-#         except:
-#             self.fireforsender = "Null"
-#         try:
-#             self.hidden = hiddenexpression.search(inputstring).group()
-#         except:
-#             self.hidden = False
-#         try:
-#             self.exclusive = exclusiveexpression.search(inputstring).group()
-#         except:
-#             self.exclusive = "Null"
-#         try:
-#             self.major = majorexpression.search(inputstring).group()
-#         except:
-#             self.major = "Null"
-#         try:
-#             self.show_major = showmajorexpression.search(inputstring).group()
-#         except:
-#             self.show_major = "Null"
-#         try:
-#             self.immediate = immediateexpression.search(inputstring).group()
-#         except:
-#             self.immediate = "Null"
-#
-#         self.options = []
-#         optionsiter = optionsexpression.finditer(inputstring)
-#         for optionrun in optionsiter:
-#             optionslice = hierarchyslice(inputstring, optionrun.end())
-#             self.options.append(option(optionslice))
 
 class option():
     def __init__(self, inputstatement):
@@ -310,6 +219,7 @@ class option():
 
 class event_description():
     def __init__(self, inputstatement):
+        self.trigger = None
         for substatement in inputstatement.values:
             if type(substatement) == statement:
                 if substatement.tag == "text":
@@ -318,7 +228,25 @@ class event_description():
                     self.trigger = substatement.values[0]
             else:
                 self.text = substatement
-                self.trigger = None
+
+    def __repr__(self):
+        return self.export()
+
+    def export(self):
+        exportstr = ""
+        if type(self.trigger) is None:
+            exportstr += "desc = " + self.text
+
+        else:
+            exportstr += "desc = {\n\n"
+
+            exportstr += "text = " + self.text + "\n"
+            exportstr += "trigger = TO BE COMPLETED\n"
+
+            exportstr += "\n}\n"
+
+        return exportstr
+
 
 
 class title():
@@ -346,16 +274,65 @@ class title():
 
             exportstr += "TO BE COMPLETED"
 
-            exportstr += "}\n"
+            exportstr += "\n}\n"
 
         return exportstr
 
+class mean_time_to_happen:
+    def __init__(self, base, modifier_list):
+        self.base = base
+        self.modifiers = modifier_list
+
+    def __repr__(self):
+        return self.export()
+
+    def export(self):
+        pass
+
+    @staticmethod
+    def parser(input_statement):
+        export_object = mean_time_to_happen(0, [])
+
+        for statement in input_statement.values:
+
+            if statement.tag == "base" or "days":
+                export_object.base = int(statement.values[0])
+            if statement.tag == "months":
+                export_object.base = int(statement.values[0]) * 30
+            if statement.tag == "years":
+                export_object.base = int(statement.values[0]) * 365
+            if statement.tag == "modifier":
+                export_object.modifiers.append(mtth_modifier.parser(statement))
 
 
+        return export_object
 
 
-###Fuctions
+class mtth_modifier:
+    def __init__(self, factor, trigger_list):
+        self.factor = factor
+        self.trigger_list = trigger_list
 
+    @staticmethod
+    def parser(input_statement):
+        export_object = mean_time_to_happen(0, [])
 
+        for statement in input_statement.values:
+            if statement.tag == "factor":
+                export_object.factor = input_statement.values[0]
 
-###
+            elif statement.tag in SCOPE_TEMPLATE_DICT:
+                export_object.trigger_list.append(scope(statement.tag, statement.evaluator, statement.values, SCOPE_TEMPLATE_DICT[statement.tag]))
+
+            elif statement.tag in TRIGGER_TEMPLATE_DICT:
+                export_object.trigger_list.append(trigger(statement.tag, statement.evaluator, statement.values, TRIGGER_TEMPLATE_DICT[statement.tag]))
+
+            elif statement.tag in MODIFIER_TEMPLATE_DICT:
+                export_object.trigger_list.append(modifier(statement.tag, statement.evaluator, statement.values, MODIFIER_TEMPLATE_DICT[statement.tag]))
+
+            elif statement.tag in COMMAND_TEMPLATE_DICT:
+                export_object.trigger_list.append(command(statement.tag, statement.evaluator, statement.values, COMMAND_TEMPLATE_DICT[statement.tag]))
+            else:
+                export_object.trigger_list.append(nestable(statement.tag, statement.evaluator, statement.values))
+
+        return export_object
