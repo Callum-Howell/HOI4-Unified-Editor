@@ -1,27 +1,27 @@
 import re
 
-#####Classes
 
-class localisationfile():
-    def __init__(self, inputstring, name):
-        loc_langexpression = re.compile("l_.+\s")
+#Classes
+
+class localisation_file:
+    def __init__(self, input_string, name):
+        loc_lang_expression = re.compile("l_.+\s")
         self.name = name
-        self.file_lang = loc_langexpression.search(inputstring).group()[2:-2]
+        self.file_lang = loc_lang_expression.search(input_string).group()[2:-2]
         self.loc_dict = {}
 
-        inputstring = inputstring[loc_langexpression.search(inputstring).end():]
+        input_string = input_string[loc_lang_expression.search(input_string).end():]
 
         locexpression = re.compile(".+:.+\".+\"")
         keyexpression = re.compile(".+:")
         itemexpression = re.compile("\".+\"")
 
-        loclist = locexpression.finditer(inputstring)
+        loclist = locexpression.finditer(input_string)
         for localisation in loclist:
-            self.loc_dict[keyexpression.search(localisation.group()).group()[1:-1]] = itemexpression.search(localisation.group()).group()
+            self.loc_dict[keyexpression.search(localisation.group()).group()[1:-1]] = itemexpression.search(
+                localisation.group()).group()
 
-#Enable for key reading test in console
+# Enable for key reading test in console
 #        for value in self.loc_dict.items():
 #            print(value[0])
 #        print(self.file_lang)
-
-#####

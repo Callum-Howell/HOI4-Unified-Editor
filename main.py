@@ -536,7 +536,7 @@ class mod_file:
             opener = open(fileloc, mode="r", encoding="utf-8-sig")
             rawfilestring = opener.read()
 
-            self.locfileslist.append(localisationfile(rawfilestring, locfileloc))
+            self.locfileslist.append(localisation_file(rawfilestring, locfileloc))
 
         self.countryload()
 
