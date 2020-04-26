@@ -293,7 +293,7 @@ class event_file_info_frame:
         self.triggered_only_button.grid(row=0, column=0)
         self.triggered_only_button.deselect()
 
-        if self.event.triggeredonce == True:
+        if self.event.triggered_only == True:
             self.triggered_only_button.select()
 
         self.triggers_display_container = tkinter.Frame(self.triggers_edit_page)

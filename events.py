@@ -21,65 +21,30 @@ class event_file():
             elif statement.tag == "country_event" or statement.tag == "news_event" or statement.tag == "unit_leader_event" or statement.tag == "state_event":
                 self.event_list.append(event(statement))
 
+        print(self)
+
     def __len__(self):
         return len(self.event_list)
 
+    def __repr__(self):
+        return self.export()
 
-# class eventfile():
-#     def __init__(self, eventfile, filename):
-#         readyfile = self.despacer(eventfile)
-#         self.name = filename
-#         self.eventify(readyfile)
-#
-#
-#
-#     def despacer(self, file):
-#         despacedstring = ""
-#         for character in file:
-#             if character == " ":
-#                 pass
-#
-#             else:
-#                 despacedstring += character
-# #        print(despacedstring)
-#         return despacedstring
-#
-#     def eventify(self, file):
-#
-# # First the namespace is isolated
-#
-#         namespaceexpression = re.compile("add_namespace=.+(#|)")
-#         self.namespace = namespaceexpression.search(file).group()[14:]
-#
-# # Then the beginning each event is found
-#
-#         eventexpression = re.compile("(^country_event=|^news_event=|^unit_leader_event=|^state_event=)", re.MULTILINE)
-#
-#         filereader = file
-#         eventstringlist = []
-#         searcher = True
-#         while searcher == True:
-#             search = eventexpression.search(filereader)
-#             try:
-#                 evtstring = hierarchyslice(filereader, search.end())
-#                 eventstringlist.append([evtstring, search.group()])
-#                 filereader = filereader[search.end()+1:]
-#             except:
-#                 break
-#
-#
-# # Finally, they are converted to event objects
-#
-#         self.eventlist = []
-#         for eventstring in eventstringlist:
-#             self.eventlist.append(event(eventstring[0], eventstring[1]))
-#
-#
-#     def findevent(self, searchid):
-#         for event in self.eventlist:
-#             if event.id == searchid:
-#                 return event
-#
+    def export(self):
+        exportstr = ""
+        exportstr += "#" + self.name[:-4] + "\n\n"
+
+        for name_space in self.name_spaces:
+            exportstr += "add_namespace = " + name_space + "\n"
+
+
+        for event in self.event_list:
+            exportstr += event.export()
+
+        return exportstr
+
+
+
+
 
 class event():
     def __init__(self, inputstatement):
@@ -88,14 +53,14 @@ class event():
         self.rawtext = ""
 
         self.id = "Not Specified"
-        self.title = "Not Specified"
+        self.title = []
         self.desc = []
         self.picture = "Not Specified"
         self.options = []
         self.triggers = []
         self.mtth = "Not Specified"
         self.fireonlyonce = "Not Specified"
-        self.triggeredonce = False
+        self.triggered_only = False
         self.timeout = "Not Specified"
         self.fireforsender = "Not Specified"
         self.hidden = False
@@ -108,7 +73,7 @@ class event():
             if substatement.tag == "id":
                 self.id = substatement.values[0]
             elif substatement.tag == "title":
-                self.title = substatement.values[0]
+                self.title.append(title(substatement))
             elif substatement.tag == "desc":
                 self.desc.append(event_description(substatement))
             elif substatement.tag == "picture":
@@ -134,7 +99,7 @@ class event():
                 self.fireonlyonce = substatement.values[0]
             elif substatement.tag == "is_triggered_only":
                 if substatement.values[0] == "yes":
-                    self.triggeredonce = True
+                    self.triggered_only = True
             elif substatement.tag == "timeout_days":
                 self.timeout = substatement.values[0]
             elif substatement.tag == "fire_for_sender":
@@ -148,8 +113,8 @@ class event():
                 self.major = substatement.values[0]
             elif substatement.tag == "show_major":
                 self.showmajor = substatement.values[0]
-            elif substatement.tag == "immediate":
-                self.immediate = substatement.values[0]
+#            elif substatement.tag == "immediate":
+#                self.immediate = substatement.values[0]
 
 
         self.create_raw_text()
@@ -158,11 +123,47 @@ class event():
         self.rawtext = ""
         self.rawtext += self.eventtype + " = {\n\n"
 
-        self.rawtext += "\tid = " + self.id + "\n"
-        # print(self.title)
-        # self.rawtext += "\ttitle = " + self.title + "\n"
+        if self.id != "Not Specified":
+            self.rawtext += "\tid = " + self.id + "\n"
 
-        self.rawtext += "}"
+        for title in self.title:
+            title_text = title.export()
+            for line in title_text.splitlines():
+                self.rawtext += "\t" + line
+            self.rawtext += "\t\n"
+
+        if self.picture != "Not Specified":
+            self.rawtext += "\tpicture = " + self.picture + "\n"
+
+        if self.fireonlyonce != "Not Specified":
+            self.rawtext += "\tfire_only_once = yes\n"
+
+        if self.triggered_only != False:
+            self.rawtext += "\tis_trigerred_only = yes\n"
+
+        if self.timeout != "Not Specified":
+            self.rawtext += "\ttimeout_days = " + self.timeout + "\n"
+
+        if self.fireforsender != "Not Specified":
+            self.rawtext += "\tfire_for_sender = " + self.fireforsender + "\n"
+
+        if self.hidden != False:
+            self.rawtext += "\thidden = yes\n"
+
+        if self.exclusive != "Not Specified":
+            self.rawtext += "\texclusive = " + self.exclusive + "\n"
+
+        if self.major != "Not Specified":
+            self.rawtext += "\tmajor = " + self.major + "\n"
+
+        if self.showmajor != "Not Specified":
+            self.rawtext += "\tshow_major = TODO#INCOMPLETE\n"
+
+        if self.immediate != "Not Specified":
+            self.rawtext += "\timmediate = " + self.immediate + "\n"
+
+
+        self.rawtext += "\n}\n"
 
     def export(self):
         self.create_raw_text()
@@ -332,31 +333,29 @@ class title():
                 self.text = substatement
                 self.trigger = None
 
+    def __repr__(self):
+        return self.export()
+
+    def export(self):
+        exportstr = ""
+        if self.trigger is None:
+            exportstr += "title = " + self.text
+
+        else:
+            exportstr += "title = {\n\n"
+
+            exportstr += "TO BE COMPLETED"
+
+            exportstr += "}\n"
+
+        return exportstr
+
+
+
+
 
 ###Fuctions
 
-def hierarchyslice(string, start):
-    bracketcount = 0
-    processedstring = ""
-    for character in string[start:]:
-        if character == "\t":
-            pass
-        if character == "}":
-            bracketcount -= 1
-        if character == "{":
-            bracketcount += 1
-        if bracketcount == 0:
-            break
-        processedstring += character
 
-    return processedstring
-
-
-def linefy(string):
-    lineexpression = re.compile("\n.+")
-    linelist = []
-    for line in lineexpression.finditer(string):
-        linelist.append(line.group())
-    return linelist
 
 ###
