@@ -21,7 +21,6 @@ class event_file():
             elif statement.tag == "country_event" or statement.tag == "news_event" or statement.tag == "unit_leader_event" or statement.tag == "state_event":
                 self.event_list.append(event(statement))
 
-        print(self)
 
     def __len__(self):
         return len(self.event_list)
@@ -73,7 +72,7 @@ class event():
             if substatement.tag == "id":
                 self.id = substatement.values[0]
             elif substatement.tag == "title":
-                self.title.append(title(substatement))
+                self.title.append(title.parser(substatement))
             elif substatement.tag == "desc":
                 self.desc.append(event_description(substatement))
             elif substatement.tag == "picture":
@@ -85,11 +84,11 @@ class event():
                     if trigger_statement == None:
                         pass
 
-                    elif trigger_statement.tag in TRIGGER_TEMPLATE_DICT:
+                    elif trigger_statement.tag in TRIGGER_TEMPLATES:
                         self.triggers.append(trigger(trigger_statement.tag,
                                                      trigger_statement.values,
                                                      trigger_statement.evaluator,
-                                                     TRIGGER_TEMPLATE_DICT[trigger_statement]))
+                                                     TRIGGER_TEMPLATES[trigger_statement]))
                     else:
                         self.triggers.append(nestable(trigger_statement.tag, trigger_statement.values, trigger_statement.evaluator))
 
@@ -198,17 +197,17 @@ class option():
                     for sub_nestable in substatement.values:
                         self.ai_chance.append(nestable(substatement.tag, substatement.evaluator, substatement.values))
 
-                elif substatement.tag in SCOPE_TEMPLATE_DICT:
-                    self.effects.append(scope(substatement.tag, substatement.evaluator, substatement.values, SCOPE_TEMPLATE_DICT[substatement.tag]))
+                elif substatement.tag in SCOPE_TEMPLATES:
+                    self.effects.append(scope(substatement.tag, substatement.evaluator, substatement.values, SCOPE_TEMPLATES[substatement.tag]))
 
-                elif substatement.tag in TRIGGER_TEMPLATE_DICT:
-                    self.effects.append(trigger(substatement.tag, substatement.evaluator, substatement.values, TRIGGER_TEMPLATE_DICT[substatement.tag]))
+                elif substatement.tag in TRIGGER_TEMPLATES:
+                    self.effects.append(trigger(substatement.tag, substatement.evaluator, substatement.values, TRIGGER_TEMPLATES[substatement.tag]))
 
-                elif substatement.tag in MODIFIER_TEMPLATE_DICT:
-                    self.effects.append(modifier(substatement.tag, substatement.evaluator, substatement.values, MODIFIER_TEMPLATE_DICT[substatement.tag]))
+                elif substatement.tag in MODIFIER_TEMPLATES:
+                    self.effects.append(modifier(substatement.tag, substatement.evaluator, substatement.values, MODIFIER_TEMPLATES[substatement.tag]))
 
-                elif substatement.tag in COMMAND_TEMPLATE_DICT:
-                    self.effects.append(command(substatement.tag, substatement.evaluator, substatement.values, COMMAND_TEMPLATE_DICT[substatement.tag]))
+                elif substatement.tag in COMMAND_TEMPLATES:
+                    self.effects.append(command(substatement.tag, substatement.evaluator, substatement.values, COMMAND_TEMPLATES[substatement.tag]))
                 else:
                     self.effects.append(nestable(substatement.tag, substatement.evaluator, substatement.values))
 
@@ -250,16 +249,9 @@ class event_description():
 
 
 class title():
-    def __init__(self, inputstatement):
-        for substatement in inputstatement.values:
-            if type(substatement) == statement:
-                if substatement.tag == "text":
-                    self.text = substatement.values[0]
-                elif substatement.tag == "trigger":
-                    self.trigger = substatement.values[0]
-            else:
-                self.text = substatement
-                self.trigger = None
+    def __init__(self, text, trigger_list):
+        self.text = "not specified"
+        self.trigger = []
 
     def __repr__(self):
         return self.export()
@@ -277,6 +269,24 @@ class title():
             exportstr += "\n}\n"
 
         return exportstr
+
+    @staticmethod
+    def parser(input_statement):
+
+        export_object = title("", [])
+
+        for substatement in input_statement.values:
+            if type(substatement) == statement:
+                if substatement.tag == "text":
+                    export_object.text = substatement.values[0]
+                elif substatement.tag == "trigger":
+                    export_object.trigger = substatement.values[0]
+            else:
+                export_object.text = substatement
+                export_object.trigger = None
+
+        return export_object
+
 
 class mean_time_to_happen:
     def __init__(self, base, modifier_list):
@@ -313,6 +323,20 @@ class mtth_modifier:
         self.factor = factor
         self.trigger_list = trigger_list
 
+    def __repr__(self):
+        return self.export()
+
+    def export(self):
+        exportstr = "modifier = {\n"
+
+        exportstr += "\tfactor = " + str(self.factor)
+        for trigger in self.trigger_list:
+            exportstr += "\t" + trigger.export()
+
+        exportstr += "}\n"
+
+        return exportstr
+
     @staticmethod
     def parser(input_statement):
         export_object = mean_time_to_happen(0, [])
@@ -321,17 +345,17 @@ class mtth_modifier:
             if statement.tag == "factor":
                 export_object.factor = input_statement.values[0]
 
-            elif statement.tag in SCOPE_TEMPLATE_DICT:
-                export_object.trigger_list.append(scope(statement.tag, statement.evaluator, statement.values, SCOPE_TEMPLATE_DICT[statement.tag]))
+            elif statement.tag in SCOPE_TEMPLATES:
+                export_object.trigger_list.append(scope(statement.tag, statement.evaluator, statement.values, SCOPE_TEMPLATES[statement.tag]))
 
-            elif statement.tag in TRIGGER_TEMPLATE_DICT:
-                export_object.trigger_list.append(trigger(statement.tag, statement.evaluator, statement.values, TRIGGER_TEMPLATE_DICT[statement.tag]))
+            elif statement.tag in TRIGGER_TEMPLATES:
+                export_object.trigger_list.append(trigger(statement.tag, statement.evaluator, statement.values, TRIGGER_TEMPLATES[statement.tag]))
 
-            elif statement.tag in MODIFIER_TEMPLATE_DICT:
-                export_object.trigger_list.append(modifier(statement.tag, statement.evaluator, statement.values, MODIFIER_TEMPLATE_DICT[statement.tag]))
+            elif statement.tag in MODIFIER_TEMPLATES:
+                export_object.trigger_list.append(modifier(statement.tag, statement.evaluator, statement.values, MODIFIER_TEMPLATES[statement.tag]))
 
-            elif statement.tag in COMMAND_TEMPLATE_DICT:
-                export_object.trigger_list.append(command(statement.tag, statement.evaluator, statement.values, COMMAND_TEMPLATE_DICT[statement.tag]))
+            elif statement.tag in COMMAND_TEMPLATES:
+                export_object.trigger_list.append(command(statement.tag, statement.evaluator, statement.values, COMMAND_TEMPLATES[statement.tag]))
             else:
                 export_object.trigger_list.append(nestable(statement.tag, statement.evaluator, statement.values))
 
