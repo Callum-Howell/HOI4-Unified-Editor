@@ -97,9 +97,9 @@ class editor_frame:
         self.info_display = ideology_info(self.mainwindow, self.app, self.opsbar.selector.get())
 
 
-class base_info_display:
-    def __init__(self, infoframe, app, selection):
-        self.infoframe = tkinter.Frame(infoframe)
+class base_info_frame:
+    def __init__(self, editor_frame, app, selection):
+        self.infoframe = tkinter.Frame(editor_frame)
         self.infoframe.grid(row=1, column=0, sticky="NSEW")
 
 
@@ -166,30 +166,32 @@ class ops_bar:
         return self.selector.get()
 
 
-class country_info_frame:
+class country_info_frame(base_info_frame):
     def __init__(self, displayframe, app, countrychoice):
-        self.country_notebook = tkinter.ttk.Notebook(displayframe)
+        super().__init__(displayframe, app, countrychoice)
+
+        self.country_notebook = tkinter.ttk.Notebook(self.infoframe)
         self.country_notebook.grid()
 
-        self.main_info_frame = tkinter.Frame(self.countrynotebook)
-        self.countrynotebook.add(self.main_info_frame, text="Main")
+        self.main_info_frame = tkinter.Frame(self.country_notebook)
+        self.country_notebook.add(self.main_info_frame, text="Main")
         self.example_label = tkinter.Label(self.main_info_frame, text=countrychoice.tag)
         self.example_label.grid()
 
         # Tech Display
 
-        self.tech_frame = tkinter.Frame(self.countrynotebook)
-        self.countrynotebook.add(self.tech_frame, text="Technologies")
+        self.tech_frame = tkinter.Frame(self.country_notebook)
+        self.country_notebook.add(self.tech_frame, text="Technologies")
 
         # Leader Display
 
-        self.leader_frame = tkinter.Frame(self.countrynotebook)
-        self.countrynotebook.add(self.leader_frame, text="Leaders")
+        self.leader_frame = tkinter.Frame(self.country_notebook)
+        self.country_notebook.add(self.leader_frame, text="Leaders")
 
         # OOB Display
 
-        self.oob_frame = tkinter.Frame(self.countrynotebook)
-        self.countrynotebook.add(self.oob_frame, text="OOB")
+        self.oob_frame = tkinter.Frame(self.country_notebook)
+        self.country_notebook.add(self.oob_frame, text="OOB")
 
 
 class event_editor_frame(editor_frame):
@@ -239,8 +241,9 @@ class event_button:
         self.evtdisplay.loadinfo(self.event)
 
 
-class event_file_info_frame:
+class event_file_info_frame(base_info_frame):
     def __init__(self, master, event_file, app):
+        super().__init__(master, app, event_file)
 
         self.event_selector = event_selector_box(master, app, master, event_file)
 
