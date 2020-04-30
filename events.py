@@ -115,7 +115,6 @@ class event():
 #            elif substatement.tag == "immediate":
 #                self.immediate = substatement.values[0]
 
-
         self.create_raw_text()
 
     def create_raw_text(self):
@@ -216,6 +215,7 @@ class option():
 
 
 
+
 class event_description():
     def __init__(self, inputstatement):
         self.trigger = None
@@ -228,8 +228,6 @@ class event_description():
             else:
                 self.text = substatement
 
-    def __repr__(self):
-        return self.export()
 
     def export(self):
         exportstr = ""
@@ -253,8 +251,7 @@ class title():
         self.text = "not specified"
         self.trigger = []
 
-    def __repr__(self):
-        return self.export()
+
 
     def export(self):
         exportstr = ""
@@ -293,8 +290,7 @@ class mean_time_to_happen:
         self.base = base
         self.modifiers = modifier_list
 
-    def __repr__(self):
-        return self.export()
+
 
     def export(self):
         pass
@@ -323,8 +319,6 @@ class mtth_modifier:
         self.factor = factor
         self.trigger_list = trigger_list
 
-    def __repr__(self):
-        return self.export()
 
     def export(self):
         exportstr = "modifier = {\n"

@@ -17,20 +17,24 @@ class parsingfile():
 
         ### Tabs and Linebreaks Removed
 
-        detabbed = ""
-        for char in self.processedstring:
-            if char == "\t" or char == "\n":
-                detabbed += " "
-            elif char == "{" or char == "}" or char == "=" or char == "<" or char == ">" or char == '"':
-                detabbed += (" " + char + " ")
+        spaced = self.processedstring.replace("{", " { ")
+        spaced = spaced.replace("}", " } ")
+        spaced = spaced.replace("\"", " \" ")
+        detabbed = spaced.replace("\t" or "\n", " ")
 
-
-            else:
-                detabbed += char
+        # for char in self.processedstring:
+        #     if char == "\t" or char == "\n":
+        #         detabbed += " "
+        #     elif char == "{" or char == "}" or char == "=" or char == "<" or char == ">" or char == '"':
+        #         detabbed += (" " + char + " ")
+        #
+        #
+        #     else:
+        #         detabbed += char
 
         self.processedstring = detabbed
 
-        ### Split into blocks of text
+        # Split into blocks of text
 
         self.statements = []
 
@@ -240,23 +244,13 @@ class nestable():
                 else:
                     self.values.append(substatement)
 
-    def __repr__(self):
-        return self.export()
 
     def export(self):
         exportstr = ""
 
         exportstr += self.tag + " " + self.evaluator + " "
 
-        for value in self.values:
-            if len(self.values) == 1 and type(value) is not nestable:
-                exportstr += value
-
-            elif type(value) == nestable:
-                value.export()
-
-            else:
-                pass
+        print("NESTABLE EXPORTS")
 
         return exportstr
 
