@@ -74,7 +74,7 @@ class event():
             elif substatement.tag == "title":
                 self.title.append(title.parser(substatement))
             elif substatement.tag == "desc":
-                self.desc.append(event_description(substatement))
+                self.desc.append(event_description.parse(substatement))
             elif substatement.tag == "picture":
                 self.picture = substatement.values[0]
             elif substatement.tag == "option":
@@ -217,16 +217,25 @@ class option():
 
 
 class event_description():
-    def __init__(self, inputstatement):
-        self.trigger = None
+    def __init__(self, text, trigger):
+        self.text = text
+        self.trigger = trigger
+
+
+
+    @staticmethod
+    def parse(inputstatement):
+        exp_obj = event_description("", [])
         for substatement in inputstatement.values:
             if type(substatement) == statement:
                 if substatement.tag == "text":
-                    self.text = substatement.values[0]
+                    exp_obj.text = substatement.values[0]
                 elif substatement.tag == "trigger":
-                    self.trigger = substatement.values[0]
+                    exp_obj.trigger = substatement.values[0]
             else:
-                self.text = substatement
+                exp_obj.text = substatement
+
+        return exp_obj
 
 
     def export(self):
