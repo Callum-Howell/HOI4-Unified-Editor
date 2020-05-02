@@ -2,7 +2,7 @@ import re
 import csv
 
 
-###
+#
 
 class parsingfile():
     def __init__(self, inputstring):
@@ -91,6 +91,9 @@ class statement():
                 exptstr += self.values[0]
 
         return exptstr
+
+
+
 
 
 
@@ -220,37 +223,53 @@ class nestable():
         self.values = []
         self.evaluator = evaluator
 
-        if len(value) == 1:
-            self.values.append(value)
+    def __repr__(self):
+        repstring = ""
+        repstring += self.tag + " " + self.evaluator
+        if len(self.values) == 1:
+            repstring += str(self.values[0])
 
         else:
-            for substatement in value:
-                if type(substatement) == statement:
-                    if substatement.tag in SCOPE_TEMPLATES:
-                        self.values.append(scope(substatement.tag, substatement.evaluator, substatement.values,
-                                                 SCOPE_TEMPLATES[substatement.tag]))
-                    elif substatement.tag in COMMAND_TEMPLATES:
-                        self.values.append(command(substatement.tag, substatement.evaluator, substatement.values,
-                                                   COMMAND_TEMPLATES[substatement.tag]))
-                    elif substatement.tag in TRIGGER_TEMPLATES:
-                        self.values.append(trigger(substatement.tag, substatement.evaluator, substatement.values,
-                                                   TRIGGER_TEMPLATES[substatement.tag]))
-                    elif substatement.tag in MODIFIER_TEMPLATES:
-                        self.values.append(modifier(substatement.tag, substatement.evaluator, substatement.values,
-                                                    MODIFIER_TEMPLATES[substatement.tag]))
-                    else:
-                        self.values.append(nestable(substatement.tag, substatement.evaluator, substatement.values))
+            repstring += "{\n"
+            for value in self.values:
+                repstring += value
 
-                else:
-                    self.values.append(substatement)
+            repstring += "}\n"
+
+
+        return repstring
+
+
+    @staticmethod
+    def parse(inputstatement):
+        if inputstatement.tag in SCOPE_TEMPLATES:
+            exp_object = scope("", [], "=", SCOPE_TEMPLATES[inputstatement.tag])
+        elif inputstatement.tag in COMMAND_TEMPLATES:
+            exp_object = command("", [], "=", COMMAND_TEMPLATES[inputstatement.tag])
+        elif inputstatement.tag in TRIGGER_TEMPLATES:
+            exp_object = trigger("", [], "=", TRIGGER_TEMPLATES[inputstatement.tag])
+        elif inputstatement.tag in MODIFIER_TEMPLATES:
+            exp_object = modifier("", [], "=", MODIFIER_TEMPLATES[inputstatement.tag])
+        else:
+            exp_object = nestable("", [], "=")
+
+        exp_object.tag = inputstatement.tag
+        exp_object.values = []
+        exp_object.evaluator = inputstatement.evaluator
+
+        for value in inputstatement.values:
+            if type(inputstatement.values[0]) != statement:
+                exp_object.values.append(value)
+            else:
+                exp_object.values.append(nestable.parse(value))
+
+        return exp_object
 
 
     def export(self):
         exportstr = ""
+        exportstr += self.tag + " " + self.evaluator + " " + "TO BE COMPLETED"
 
-        exportstr += self.tag + " " + self.evaluator + " "
-
-        print("NESTABLE EXPORTS")
 
         return exportstr
 

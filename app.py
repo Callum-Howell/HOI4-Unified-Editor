@@ -286,8 +286,16 @@ class event_file_info_frame(base_info_frame):
         self.infopanels = tkinter.Frame(self.infodisplayframe, relief="groove", bd=3)
         self.infopanels.grid(row=0, column=0, sticky="NSEW")
 
+        self.titles_panel = tkinter.Frame(self.infodisplayframe)
+        self.titles_panel.grid(row=2, column=0, columnspan=2)
+
+        tit_count = 0
+        for title in self.event.title:
+            title_label = tkinter.Label(self.titles_panel, text=title.text)
+            title_label.grid(row=tit_count, column=0)
+            tit_count += 1
+
         self.idframe = event_var_display_frame(self.infopanels, "ID", self.event.id, 0)
-        self.titleframe = event_var_display_frame(self.infopanels, "Title", self.event.title, 1)
         self.descframe = event_var_display_frame(self.infopanels, "Description", self.event.desc[0].text, 2)
 
         # Photo Display
@@ -579,22 +587,15 @@ class mod_file:
                         filereader = fileopener.read()
                         self.countrylist.append(country(filereader, countryfile[:3]))
 
-
-
 class object_ui_mapper:
     def __init__(self, object):
-        pass
+        print(dir(object))
 
 
 def savecheck(func):
     pass
 
-
-
-######
-
-
-######
+#
 
 root = tkinter.Tk()
 
