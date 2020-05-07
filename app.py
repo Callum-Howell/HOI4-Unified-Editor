@@ -536,7 +536,7 @@ class mod_file:
             opener = open(fileloc, mode="r", encoding="utf-8-sig")
             rawfilestring = opener.read()
 
-            self.eventfileslist.append(event_file(rawfilestring, eventfileloc))
+            self.eventfileslist.append(event_file.parse(rawfilestring, eventfileloc))
 
         self.locfileslist = []
         for locfileloc in os.listdir(directory + "\localisation\\"):
@@ -589,7 +589,25 @@ class mod_file:
 
 class object_ui_mapper:
     def __init__(self, object):
-        print(dir(object))
+        self.obj_type = type(object)
+        attribute_mapper = {}
+
+        for attribute in vars(object):
+            keyname = attribute + "_key"
+            self.__setattr__(keyname, tkinter.StringVar)
+
+
+    def create_new_object(self):
+           export_object = self.obj_type.__init__()
+
+#        for attribute in vars(object).items():
+#            if attribute.key == "obj_type":
+#                pass
+#            else:
+#                print(attribute)
+                #export_object(setattr(export_object, attribute.key, attribute.value))
+
+#        return export_object
 
 
 def savecheck(func):

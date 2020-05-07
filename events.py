@@ -7,25 +7,20 @@ from hoi4parser import *
 ###classes
 
 class event_file():
-    def __init__(self, event_txt_file, filename):
-        self.name = filename
-        self.parsed_file = parsingfile(event_txt_file)
+    def __init__(self, name="Unnamed"):
+        self.name = name
 
         self.name_spaces = []
         self.event_list = []
-
-        for statement in self.parsed_file.statements:
-            if statement.tag == "add_namespace":
-                self.name_spaces.append(statement.values[0])
-
-            elif statement.tag == "country_event" or statement.tag == "news_event" or statement.tag == "unit_leader_event" or statement.tag == "state_event":
-                self.event_list.append(event(statement))
 
 
     def __len__(self):
         return len(self.event_list)
 
     def __repr__(self):
+        return "[event_file]" + self.name + "[\\event_file]"
+
+    def __str__(self):
         return self.export()
 
     def export(self):
@@ -41,14 +36,26 @@ class event_file():
 
         return exportstr
 
+    @staticmethod
+    def parse(event_txt_file, filename):
+        export_object = event_file()
 
+        export_object.name = filename
+        parsed_file = parsingfile(event_txt_file)
+        export_object.name_spaces = []
+        export_object.event_list = []
+        for statement in parsed_file.statements:
+            if statement.tag == "add_namespace":
+                export_object.name_spaces.append(statement.values[0])
+            elif statement.tag == "country_event" or statement.tag == "news_event" or statement.tag == "unit_leader_event" or statement.tag == "state_event":
+                export_object.event_list.append(event.parse(statement))
 
-
+        return export_object
 
 class event():
-    def __init__(self, inputstatement):
+    def __init__(self):
 
-        self.eventtype = inputstatement.tag
+        self.eventtype = "Undefined"
         self.rawtext = ""
 
         self.id = "Not Specified"
@@ -68,48 +75,53 @@ class event():
         self.showmajor = "Not Specified"
         self.immediate = "Not Specified"
 
+    @staticmethod
+    def parse(inputstatement):
+        export_obj = event()
+        export_obj.eventtype = inputstatement.tag
+
         for substatement in inputstatement.values:
             if substatement.tag == "id":
-                self.id = substatement.values[0]
+                export_obj.id = substatement.values[0]
             elif substatement.tag == "title":
-                self.title.append(title.parser(substatement))
+                export_obj.title.append(title.parser(substatement))
             elif substatement.tag == "desc":
-                self.desc.append(event_description.parse(substatement))
+                export_obj.desc.append(event_description.parse(substatement))
             elif substatement.tag == "picture":
-                self.picture = substatement.values[0]
+                export_obj.picture = substatement.values[0]
             elif substatement.tag == "option":
-                self.options.append(option(substatement))
+                export_obj.options.append(option(substatement))
             elif substatement.tag == "trigger":
                 for trigger_statement in substatement.values:
                     if trigger_statement == None:
                         pass
                     elif trigger_statement.tag in TRIGGER_TEMPLATES:
-                        self.triggers.append(nestable.parse(trigger_statement))
+                        export_obj.triggers.append(nestable.parse(trigger_statement))
 
             elif substatement.tag == "mean_time_to_happen":
-                self.mtth = substatement.values[0]
+                export_obj.mtth = substatement.values[0]
             elif substatement.tag == "fire_only_once":
-                self.fireonlyonce = substatement.values[0]
+                export_obj.fireonlyonce = substatement.values[0]
             elif substatement.tag == "is_triggered_only":
                 if substatement.values[0] == "yes":
-                    self.triggered_only = True
+                    export_obj.triggered_only = True
             elif substatement.tag == "timeout_days":
-                self.timeout = substatement.values[0]
+                export_obj.timeout = substatement.values[0]
             elif substatement.tag == "fire_for_sender":
-                self.fireforsender = substatement.values[0]
+                export_obj.fireforsender = substatement.values[0]
             elif substatement.tag == "hidden":
                 if substatement.values[0] == "yes":
-                    self.hidden = True
+                    export_obj.hidden = True
             elif substatement.tag == "exclusive":
-                self.exclusive = substatement.values[0]
+                export_obj.exclusive = substatement.values[0]
             elif substatement.tag == "major":
-                self.major = substatement.values[0]
+                export_obj.major = substatement.values[0]
             elif substatement.tag == "show_major":
-                self.showmajor = substatement.values[0]
+                export_obj.showmajor = substatement.values[0]
 #            elif substatement.tag == "immediate":
-#                self.immediate = substatement.values[0]
+#                export_obj.immediate = substatement.values[0]
 
-        self.create_raw_text()
+        export_obj.create_raw_text()
 
     def create_raw_text(self):
         self.rawtext = ""
@@ -204,11 +216,6 @@ class option():
                 #     self.effects.append(command(substatement.tag, substatement.evaluator, substatement.values, COMMAND_TEMPLATES[substatement.tag]))
                 else:
                     self.effects.append(nestable.parse(substatement))
-                #    self.effects.append(nestable(substatement.tag, substatement.evaluator, substatement.values))
-
-
-
-
 
 
 
