@@ -123,6 +123,8 @@ class event():
 
         export_obj.create_raw_text()
 
+        return export_obj
+
     def create_raw_text(self):
         self.rawtext = ""
         self.rawtext += self.eventtype + " = {\n\n"
