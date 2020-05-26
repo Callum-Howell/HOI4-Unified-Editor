@@ -6,7 +6,7 @@ from localisation import *
 from PIL import Image, ImageTk
 from ideologies import *
 from countries import *
-import  exceptions
+import exceptions
 
 # Classes
 
@@ -124,8 +124,6 @@ class ideology_info:
             if id_check.name == selection:
                 selected_ideology = id_check
 
-        self.i_namedisplay = event_var_display_frame(self.infoframe, "Name", selected_ideology.name, 0)
-
 
 class country_editor_frame(editor_frame):
     def __init__(self, mainwindow, app, country_list):
@@ -212,8 +210,9 @@ class event_editor_frame(editor_frame):
         self.app = app
         self.mainwindow = mainwindow
 
+
         self.sub_display_frame = tkinter.Frame(self.mainwindow)
-        self.sub_display_frame.grid(row=1, column=0)
+        self.sub_display_frame.grid(row=0, column=0)
 
         self.load(mod_event_files_list[0].name)
 
@@ -228,190 +227,124 @@ class event_editor_frame(editor_frame):
         self.info_frame = event_file_info_frame(self.sub_display_frame, selected_event_file, self.app)
 
 
-class event_selector_box:
-    def __init__(self, master, app, eventdisplay, eventfile):
-        self.eventselectorframe = tkinter.Frame(master)
-        self.eventselectorframe.grid(row=0, column=0, sticky="NW")
-        self.eventdisplay = eventdisplay
-        templabel = tkinter.Label(self.eventselectorframe, text="Events to go here")
-        templabel.grid()
-
-        eventlistlabel = tkinter.Label(self.eventselectorframe, text="Event List")
-        eventlistlabel.grid(row=0, column=0)
-        buttoncount = 1
-        for event in eventfile.event_list:
-            newbutton = event_button(self, event, buttoncount, eventdisplay)
-            buttoncount += 1
-
-    def load(self, selected_event):
-        self.eventdisplay.load(selected_event)
-
-class event_button:
-    def __init__(self, master, event, button_count, event_display):
-        self.selector_frame = master.eventselectorframe
-        self.event = event
-        self.master = master
-        buttoninstance = tkinter.Button(self.selector_frame, text=event.id, command=self.load_event_info)
-        buttoninstance.grid(column=0, row=button_count, sticky="NSEW")
-
-    def load_event_info(self):
-        self.master.load(self.event)
-
-
 class event_file_info_frame(base_info_frame):
     def __init__(self, master, event_file, app):
         super().__init__(master, app, event_file)
 
-        self.event_selector = event_selector_box(self.info_frame, app, self, event_file)
+        self.loaded_event_file = event_file
+        self.mapper = ui_mapper(self.loaded_event_file)
 
-        self.mapper = ui_mapper(event_file)
-
+        self.event_selector = event_selector_box(self.info_frame, app, self, self.mapper)
         self.app = app
-        self.event_file = event_file
-        self.eventnotebook = tkinter.Frame()
+
+
+
+        self.event_notebook_frame = tkinter.Frame(self.info_frame)
 
         self.load(event_file.event_list[0])
 
 
 
     def load(self, selected_event):
-        self.eventnotebook.destroy()
+        self.event_notebook_frame.destroy()
 
-        self.event = selected_event
+        self.displayed_event = selected_event
+        self.event_notebook_frame = tkinter.Frame(self.info_frame)
+        self.event_notebook_frame.grid(row=0, column=1, sticky="NSEW")
 
-        self.eventnotebook = tkinter.ttk.Notebook(self.info_frame)
-        self.eventnotebook.grid(row=0, column=1)
+        self.event_notebook = ttk.Notebook(self.event_notebook_frame)
+        self.event_notebook.grid()
 
-        self.infodisplayframe = tkinter.Frame(self.eventnotebook)
-        self.eventnotebook.add(self.infodisplayframe, text="Event Information")
+        # Main Info
 
-        self.infopanels = tkinter.Frame(self.infodisplayframe, relief="groove", bd=3)
-        self.infopanels.grid(row=0, column=0, sticky="NSEW")
+        self.basic_info_frame = tkinter.Frame(self.event_notebook)
+        self.basic_info_frame.grid()
 
-        self.titles_panel = tkinter.Frame(self.infodisplayframe)
-        self.titles_panel.grid(row=2, column=0, columnspan=2)
+        self.id_label = tkinter.Label(self.basic_info_frame, text="ID")
+        self.id_label.grid(row=0, column=0)
 
-        tit_count = 0
-        for title in self.event.title:
-            title_label = tkinter.Label(self.titles_panel, text=title.text)
-            title_label.grid(row=tit_count, column=0)
-            tit_count += 1
+        self.event_notebook.add(self.basic_info_frame, text="Basic")
 
-        self.idframe = event_var_display_frame(self.infopanels, "ID", self.event.id, 0)
-        self.descframe = event_var_display_frame(self.infopanels, "Description", self.event.desc[0].text, 2)
+        # Triggers
 
-        # Photo Display
+        self.trigger_frame = tkinter.Frame(self.event_notebook)
+        self.trigger_frame.grid()
 
-        self.picturedisplayframe = tkinter.Frame(self.infodisplayframe, relief="groove", bd=3)
-        self.picturedisplayframe.grid(row=0, column=1, sticky="NSEW")
 
-        photostr = self.event.picture[4:]
-        if photostr + ".dds" in os.listdir(self.app.mod.directory + "\gfx\event_pictures\\"):
-            photoloc = (self.app.mod.directory + "\gfx\event_pictures\\" + photostr + ".dds")
-            raweventphoto = Image.open(photoloc)
-            displayphoto = ImageTk.PhotoImage(raweventphoto)
+        self.event_notebook.add(self.trigger_frame, text="Triggers")
 
-            self.photolabel = tkinter.Label(self.picturedisplayframe, image=displayphoto, background="black")
-            self.photolabel.image = displayphoto
-            self.photolabel.grid(row=0, column=0)
+        # options
 
+        self.options_frame = tkinter.Frame(self.event_notebook)
+        self.options_frame.grid()
+
+
+        self.event_notebook.add(self.options_frame, text="Options")
+
+        # Localisations
+
+        self.localisations_frame = tkinter.Frame(self.event_notebook)
+
+        event_keys = []
+
+        for event_key in self.mapper["event_list"][self.event_selector.selection]["title"]:
+            event_keys.append(event_key["text"])
+        for event_key in self.mapper["event_list"][self.event_selector.selection]["desc"]:
+            event_keys.append(event_key["text"])
+        for event_key in self.mapper["event_list"][self.event_selector.selection]["options"]:
+            event_keys.append(event_key["name"])
+
+        self.loc_editor = localisation_editor(self.localisations_frame, event_keys, self.app)
+
+        self.localisations_frame.grid()
+
+
+        self.event_notebook.add(self.localisations_frame, text="Localisations")
+
+        # Raw Text
+
+class event_selector_box:
+    def __init__(self, master, app, eventdisplay, mapper):
+
+        self.master = master
+        self.eventdisplay = eventdisplay
+
+        self.mapper = mapper
+        self.selection = 0
+
+        self.eventselectorframe = tkinter.Frame(master, bd=3, relief=tkinter.RAISED)
+        self.eventselectorframe.grid(row=0, column=0, sticky="NW")
+
+        self.list_label = tkinter.Label(self.eventselectorframe, text="Event List")
+        self.list_label.grid(row=0, column=0)
+
+        self.selector_box = tkinter.Listbox(self.eventselectorframe, selectmode=tkinter.SINGLE)
+        self.selector_box.grid(row=1, column=0)
+
+        self.event_control_box = tkinter.Frame(self.eventselectorframe)
+        self.event_control_box.grid(row=2, column=0)
+
+        self.new_event_button = tkinter.Button(self.event_control_box, text="New")
+        self.new_event_button.grid(row=0, column=0)
+
+        self.load_event_button = tkinter.Button(self.event_control_box, text="Load", command=self.load)
+        self.load_event_button.grid(row=0, column=1)
+
+        self.delete_event_button = tkinter.Button(self.event_control_box, text="Delete")
+        self.delete_event_button.grid(row=0, column=2)
+
+
+        for event_map in self.mapper["event_list"]:
+            self.selector_box.insert(tkinter.END, event_map["id"])
+
+
+    def load(self):
+        if len(self.selector_box.curselection()) == 0:
+            self.selection = 0
         else:
-            self.photolabel = tkinter.Label(self.picturedisplayframe, text="Picture Not Found")
-            self.photolabel.grid()
+            self.selection = self.selector_box.curselection()[0]
 
-            self.picframe = event_var_display_frame(self.picturedisplayframe, "Picture", self.event.picture, 1)
-
-        # Triggers Display
-
-        self.triggers_edit_page = tkinter.Frame(self.eventnotebook)
-
-        self.triggers_settings_box = tkinter.Frame(self.triggers_edit_page)
-        self.triggers_settings_box.grid(row=0, column=0)
-
-        self.triggered_only_button = tkinter.Checkbutton(self.triggers_settings_box, text="Triggered Only?")
-        self.triggered_only_button.grid(row=0, column=0)
-        self.triggered_only_button.deselect()
-
-        if self.event.triggered_only == True:
-            self.triggered_only_button.select()
-
-        self.triggers_display_container = tkinter.Frame(self.triggers_edit_page)
-        self.triggers_display_container.grid(row=1, column=0)
-
-        self.eventnotebook.add(self.triggers_edit_page, text="Triggers")
-
-        # Options Display
-
-        self.options_edit_page = tkinter.Frame(self.eventnotebook)
-
-        self.option_settings_box = tkinter.Frame(self.options_edit_page)
-        self.option_settings_box.grid(row=0, column=0)
-
-        self.option_box_container = tkinter.Frame(self.options_edit_page)
-        self.option_box_container.grid(row=1, column=0)
-
-        self.options_boxes = []
-        for option in self.event.options:
-            self.options_boxes.append(option_box(option, self.option_box_container, len(self.options_boxes)))
-
-        self.eventnotebook.add(self.options_edit_page, text="Options")
-
-        # Locedit Page
-
-        self.loceditpage = tkinter.Frame(self.eventnotebook)
-        self.eventnotebook.add(self.loceditpage, text="Localisations")
-
-        keycounter = [self.event.title]
-
-        for desc in self.event.desc:
-            keycounter.append(desc.text)
-
-        for option in self.event.options:
-            keycounter.append(option.name)
-
-        self.titleLocEdit = localisation_editor(self.loceditpage, keycounter, self.app)
-
-        # Raw Text Page
-
-        self.rawtextpage = tkinter.Frame(self.eventnotebook)
-        self.eventnotebook.add(self.rawtextpage, text="Raw Text")
-
-        self.rawtextedit = tkinter.Text(self.rawtextpage, width=100)
-        self.rawtextedit.insert(0.0, self.event.rawtext)
-        self.rawtextedit.grid()
-
-    def titleeditor(self):
-        titleeditdialog = localisation_editor(self.event.title, self.app)
-
-
-
-
-
-class option_box:
-    def __init__(self, input_option, master_frame, ordinal):
-        self.individual_option_frame = tkinter.Frame(master_frame, relief="groove", bd=3)
-        self.individual_option_frame.grid(row=ordinal, column=0)
-
-        self.namelabel = tkinter.Label(self.individual_option_frame, text="Name:")
-        self.namelabel.grid(row=0, column=0)
-
-        self.option_name = input_option.name
-
-        self.name_insert_box = tkinter.Entry(self.individual_option_frame, textvariable=self.option_name)
-        self.name_insert_box.insert(0, input_option.name)
-        self.name_insert_box.grid(row=0, column=1)
-
-        self.ai_factor_label = tkinter.Label(self.individual_option_frame, text="AI Factor:")
-        self.ai_factor_label.grid(row=1, column=0)
-
-        self.ai_factor_name = input_option.ai_chance
-
-        self.ai_factor_insert_box = tkinter.Entry(self.individual_option_frame, textvariable=self.ai_factor_name)
-        self.ai_factor_insert_box.insert(0, input_option.ai_chance)
-        self.ai_factor_insert_box.grid(row=1, column=1)
-
-
-
+        self.eventdisplay.load(self.mapper["event_list"][self.selection])
 
 
 class localisation_editor:
@@ -507,14 +440,6 @@ class localisation_editor:
 
             rowcounter += 1
 
-
-class mtth_button:
-    def __init__(self, master, num):
-        self.triggeredonly = tkinter.BooleanVar()
-        self.radbutton = tkinter.Radiobutton(master, text="Triggered Only?", variable=self.triggeredonly)
-        self.radbutton.grid(row=0, column=num)
-
-
 class mod_file:
     def __init__(self, directory):
         self.directory = directory
@@ -588,9 +513,15 @@ class ui_mapper:
             if type(attribute_value) is bool:
                 self.attribute_mapper[attribute_key] = tkinter.BooleanVar()
                 self.attribute_mapper[attribute_key].set(attribute_value)
+
+            elif type(attribute_value) is int:
+                self.attribute_mapper[attribute_key] = tkinter.IntVar()
+                self.attribute_mapper[attribute_key].set(attribute_value)
+
             elif type(attribute_value) is str:
                 self.attribute_mapper[attribute_key] = tkinter.StringVar()
                 self.attribute_mapper[attribute_key].set(attribute_value)
+
             elif type(attribute_value) is statement:
                 raise exceptions.StatementError
             elif type(attribute_value) is list:
@@ -604,7 +535,19 @@ class ui_mapper:
                         input_list.append(ui_mapper(list_variable))
                 self.attribute_mapper[attribute_key] = input_list
 
+    def __getitem__(self, item):
+        selection = self.attribute_mapper[item]
+        if type(selection) == tkinter.StringVar or type(selection) == tkinter.BooleanVar or type(selection) == tkinter.IntVar:
+            return self.attribute_mapper[item].get()
+        else:
+            return self.attribute_mapper[item]
 
+    def __setitem__(self, key, value):
+        selection = self.attribute_mapper[key]
+        if type(selection) == tkinter.StringVar or type(selection) == tkinter.BooleanVar or type(selection) == tkinter.IntVar:
+            return self.attribute_mapper[key].set(value)
+        else:
+            return self.attribute_mapper[key].set(value)
 
     def create_new_object(self):
         export_object = self.obj_type()

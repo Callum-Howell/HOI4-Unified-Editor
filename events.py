@@ -23,6 +23,13 @@ class event_file():
     def __str__(self):
         return self.name
 
+    def __iter__(self):
+        for event in self.event_list:
+            yield event
+
+    def __getitem__(self, item):
+        return self.event_list[item]
+
     def export(self):
         exportstr = ""
         exportstr += "#" + self.name[:-4] + "\n\n"
