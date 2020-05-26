@@ -21,7 +21,7 @@ class event_file():
         return "[event_file]" + self.name + "[\\event_file]"
 
     def __str__(self):
-        return self.export()
+        return self.name
 
     def export(self):
         exportstr = ""
@@ -54,7 +54,6 @@ class event_file():
 
 class event():
     def __init__(self):
-
         self.eventtype = "Undefined"
         self.rawtext = ""
 
@@ -73,7 +72,7 @@ class event():
         self.exclusive = "Not Specified"
         self.major = "Not Specified"
         self.showmajor = "Not Specified"
-        self.immediate = "Not Specified"
+        self.immediate = None
 
     @staticmethod
     def parse(inputstatement):
@@ -84,22 +83,22 @@ class event():
             if substatement.tag == "id":
                 export_obj.id = substatement.values[0]
             elif substatement.tag == "title":
-                export_obj.title.append(title.parser(substatement))
+                export_obj.title.append(title.parse(substatement))
             elif substatement.tag == "desc":
                 export_obj.desc.append(event_description.parse(substatement))
             elif substatement.tag == "picture":
                 export_obj.picture = substatement.values[0]
             elif substatement.tag == "option":
-                export_obj.options.append(option(substatement))
+                export_obj.options.append(option.parse(substatement))
             elif substatement.tag == "trigger":
                 for trigger_statement in substatement.values:
                     if trigger_statement == None:
                         pass
-                    elif trigger_statement.tag in TRIGGER_TEMPLATES:
+                    else:
                         export_obj.triggers.append(nestable.parse(trigger_statement))
 
             elif substatement.tag == "mean_time_to_happen":
-                export_obj.mtth = substatement.values[0]
+                export_obj.mtth = mean_time_to_happen.parser(substatement)
             elif substatement.tag == "fire_only_once":
                 export_obj.fireonlyonce = substatement.values[0]
             elif substatement.tag == "is_triggered_only":
@@ -118,8 +117,9 @@ class event():
                 export_obj.major = substatement.values[0]
             elif substatement.tag == "show_major":
                 export_obj.showmajor = substatement.values[0]
-#            elif substatement.tag == "immediate":
-#                export_obj.immediate = substatement.values[0]
+            elif substatement.tag == "immediate":
+                export_obj.immediate = option.parse(inputstatement)
+
 
         export_obj.create_raw_text()
 
@@ -171,60 +171,75 @@ class event():
         if self.showmajor != "Not Specified":
             self.rawtext += "\tshow_major = TODO#INCOMPLETE\n"
 
-        if self.immediate != "Not Specified":
-            self.rawtext += "\timmediate = " + self.immediate + "\n"
+#        if self.immediate != "Not Specified":
+#            tempstr = str(self.immediate)
+#            self.rawtext += "\timmediate = " + tempstr + "\n"
 
 
         self.rawtext += "\n}\n"
+
+    def __str__(self):
+        return self.id
+
+    def __repr__(self):
+        return "[E]" + self.id
 
     def export(self):
         self.create_raw_text()
         return self.rawtext
 
 class option():
-    def __init__(self, inputstatement):
-        self.name = ""
-        self.ai_chance = []
-        self.effects = []
-        self.empty_hidden = False
-        self.original_recipient_only = False
+    def __init__(self, name="", ai_chance=[],effects=[],empty_hidden=False,original_recipient_only=False):
+        self.name = name
+        self.ai_chance = ai_chance
+        self.effects = effects
+        self.empty_hidden = empty_hidden
+        self.original_recipient_only = original_recipient_only
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return "[O]" + self.name
+
+    @staticmethod
+    def parse(inputstatement):
+        export_obj = option()
+
+        effects_list = []
         for substatement in inputstatement.values:
             if substatement is None:
-                self.empty_hidden = True
+                export_obj.empty_hidden = True
 
             else:
                 if substatement.tag == "name":
-                    self.name = substatement.values[0]
+                    export_obj.name = substatement.values[0]
 
                 elif substatement.tag == "original_recipient_only":
-                    self.original_recipient_only = True
+                    export_obj.original_recipient_only = True
 
                 elif substatement.tag == "ai_chance":
+                    chance_list = []
                     for sub_nestable in substatement.values:
-                        self.ai_chance.append(nestable(substatement.tag, substatement.evaluator, substatement.values))
+                        if sub_nestable is None:
+                            pass
+                        else:
+                            chance_statement = nestable.parse(sub_nestable)
+                            chance_list.append(chance_statement)
+                    export_obj.ai_chance = chance_list
 
-
-                # elif substatement.tag in SCOPE_TEMPLATES:
-                #     self.effects.append(scope(substatement.tag, substatement.evaluator, substatement.values, SCOPE_TEMPLATES[substatement.tag]))
-                #
-                # elif substatement.tag in TRIGGER_TEMPLATES:
-                #     self.effects.append(trigger(substatement.tag, substatement.evaluator, substatement.values, TRIGGER_TEMPLATES[substatement.tag]))
-                #
-                # elif substatement.tag in MODIFIER_TEMPLATES:
-                #     self.effects.append(modifier(substatement.tag, substatement.evaluator, substatement.values, MODIFIER_TEMPLATES[substatement.tag]))
-                #
-                # elif substatement.tag in COMMAND_TEMPLATES:
-                #     self.effects.append(command(substatement.tag, substatement.evaluator, substatement.values, COMMAND_TEMPLATES[substatement.tag]))
                 else:
-                    self.effects.append(nestable.parse(substatement))
+                    effects_list.append(nestable.parse(substatement))
+        export_obj.effects = effects_list
+
+        return export_obj
 
 
 
 class event_description():
-    def __init__(self, text, trigger):
+    def __init__(self, text="not specified", trigger_list=[]):
         self.text = text
-        self.trigger = trigger
+        self.trigger_list = trigger_list
 
 
 
@@ -245,7 +260,7 @@ class event_description():
 
     def export(self):
         exportstr = ""
-        if type(self.trigger) is None:
+        if type(self.trigger_list) is None:
             exportstr += "desc = " + self.text
         else:
             exportstr += "desc = {\n\n"
@@ -257,13 +272,13 @@ class event_description():
 
 
 class title():
-    def __init__(self, text, trigger_list):
-        self.text = "not specified"
-        self.trigger = []
+    def __init__(self, text="not specified", trigger_list=[]):
+        self.text = text
+        self.trigger_list = trigger_list
 
     def export(self):
         exportstr = ""
-        if self.trigger is None:
+        if self.trigger_list is None:
             exportstr += "title = " + self.text
         else:
             exportstr += "title = {\n\n"
@@ -273,54 +288,56 @@ class title():
         return exportstr
 
     @staticmethod
-    def parser(input_statement):
+    def parse(input_statement):
 
-        export_object = title("", [])
+        export_obj = title("", [])
 
         for substatement in input_statement.values:
             if type(substatement) == statement:
                 if substatement.tag == "text":
-                    export_object.text = substatement.values[0]
+                    export_obj.text = substatement.values[0]
                 elif substatement.tag == "trigger":
-                    export_object.trigger = nestable.parse(substatement)
+                    export_obj.trigger_list.append(nestable.parse(substatement))
             else:
-                export_object.text = substatement
-                export_object.trigger = None
+                export_obj.text = substatement
+                export_obj.trigger = None
 
-        return export_object
+        return export_obj
 
 
 class mean_time_to_happen:
-    def __init__(self, base, modifier_list):
+    def __init__(self, base=0, modifier_list=[]):
         self.base = base
         self.modifiers = modifier_list
 
-
-
     def export(self):
-        pass
+        print("MTTH = UNFINISHED")
 
     @staticmethod
     def parser(input_statement):
-        export_object = mean_time_to_happen(0, [])
+        export_obj = mean_time_to_happen()
+
+        modifier_list = []
 
         for statement in input_statement.values:
 
-            if statement.tag == "base" or "days":
-                export_object.base = int(statement.values[0])
+
+            if statement.tag == "base" or statement.tag == "days":
+                export_obj.base = int(statement.values[0])
             if statement.tag == "months":
-                export_object.base = int(statement.values[0]) * 30
+                export_obj.base = int(statement.values[0]) * 30
             if statement.tag == "years":
-                export_object.base = int(statement.values[0]) * 365
+                export_obj.base = int(statement.values[0]) * 365
             if statement.tag == "modifier":
-                export_object.modifiers.append(mtth_modifier.parser(statement))
+                modifier_list.append(mtth_modifier.parse(statement))
 
+        export_obj.modifiers = modifier_list
 
-        return export_object
+        return export_obj
 
 
 class mtth_modifier:
-    def __init__(self, factor, trigger_list):
+    def __init__(self, factor=0, trigger_list=[]):
         self.factor = factor
         self.trigger_list = trigger_list
 
@@ -337,8 +354,8 @@ class mtth_modifier:
         return exportstr
 
     @staticmethod
-    def parser(input_statement):
-        export_object = mean_time_to_happen(0, [])
+    def parse(input_statement):
+        export_object = mtth_modifier()
 
         for statement in input_statement.values:
             if statement.tag == "factor":

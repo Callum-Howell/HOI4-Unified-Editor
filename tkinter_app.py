@@ -6,7 +6,7 @@ from localisation import *
 from PIL import Image, ImageTk
 from ideologies import *
 from countries import *
-
+import  exceptions
 
 # Classes
 
@@ -264,6 +264,8 @@ class event_file_info_frame(base_info_frame):
 
         self.event_selector = event_selector_box(self.info_frame, app, self, event_file)
 
+        self.mapper = ui_mapper(event_file)
+
         self.app = app
         self.event_file = event_file
         self.eventnotebook = tkinter.Frame()
@@ -409,17 +411,7 @@ class option_box:
         self.ai_factor_insert_box.grid(row=1, column=1)
 
 
-class event_var_display_frame:
-    def __init__(self, master, varname, initvalue, order, *additional_widgets):
-        self.displayframe = tkinter.Frame(master)
-        self.displayframe.grid(row=order, column=0, sticky="E")
 
-        self.varlabel = tkinter.Label(self.displayframe, text=varname)
-        self.inputvariable = tkinter.StringVar()
-        self.varlabel.grid(row=0, column=0, sticky="W")
-        self.entrybox = tkinter.Entry(self.displayframe, textvariable=self.inputvariable)
-        self.entrybox.insert(0, initvalue)
-        self.entrybox.grid(row=0, column=1, sticky="E")
 
 
 class localisation_editor:
@@ -587,28 +579,58 @@ class mod_file:
                         filereader = fileopener.read()
                         self.countrylist.append(country(filereader, countryfile[:3]))
 
-class object_ui_mapper:
+class ui_mapper:
     def __init__(self, object):
         self.obj_type = type(object)
-        attribute_mapper = {}
+        self.attribute_mapper = {}
 
-        for attribute in vars(object):
-            keyname = attribute + "_key"
-            self.__setattr__(keyname, tkinter.StringVar)
+        for attribute_key, attribute_value in vars(object).items():
+            if type(attribute_value) is bool:
+                self.attribute_mapper[attribute_key] = tkinter.BooleanVar()
+                self.attribute_mapper[attribute_key].set(attribute_value)
+            elif type(attribute_value) is str:
+                self.attribute_mapper[attribute_key] = tkinter.StringVar()
+                self.attribute_mapper[attribute_key].set(attribute_value)
+            elif type(attribute_value) is statement:
+                raise exceptions.StatementError
+            elif type(attribute_value) is list:
+                input_list = []
+                for list_variable in attribute_value:
+                    if type(list_variable) == str or type(list_variable) == bool:
+                        input_list.append(list_variable)
+                    elif list_variable is None:
+                        pass
+                    else:
+                        input_list.append(ui_mapper(list_variable))
+                self.attribute_mapper[attribute_key] = input_list
+
 
 
     def create_new_object(self):
-           export_object = self.obj_type.__init__()
+        export_object = self.obj_type()
 
-#        for attribute in vars(object).items():
-#            if attribute.key == "obj_type":
-#                pass
-#            else:
-#                print(attribute)
-                #export_object(setattr(export_object, attribute.key, attribute.value))
+        for attribute in self.attribute_mapper.items():
+            print(attribute)
+            if attribute[0] == "obj_type":
+                pass
+            elif type(attribute[1]) is list:
+                input_list = []
+                for value in attribute[1]:
+                    if type(value) is ui_mapper:
+                        input_list.append(value.create_new_object())
+                    else:
+                        input_list.append(value)
+                setattr(export_object, attribute[0], input_list)
+            elif type(attribute[1]) is ui_mapper:
+                setattr(export_object, attribute[0], attribute[1].create_new_object())
+            else:
+                setattr(export_object, attribute[0], attribute[1])
 
-#        return export_object
+        return export_object
 
+def obj_check(a, c):
+    for aval, cval in zip(vars(a), vars(c)):
+        print(aval, getattr(a, aval), cval, getattr(c, cval))
 
 def savecheck(func):
     pass

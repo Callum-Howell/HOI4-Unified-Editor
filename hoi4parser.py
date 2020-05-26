@@ -19,6 +19,7 @@ class parsingfile():
 
         spaced = self.processedstring.replace("{", " { ")
         spaced = spaced.replace("}", " } ")
+        spaced = spaced.replace("=", " = ")
         spaced = spaced.replace("\"", " \" ")
         detabbed = spaced.replace("\t" or "\n", " ")
 
@@ -92,6 +93,13 @@ class statement():
 
         return exptstr
 
+    def __repr__(self):
+        liststr = str(self.values)
+        return self.tag + self.evaluator + "{" + liststr + "}"
+
+    def __str__(self):
+        liststr = str(self.values)
+        return self.tag + self.evaluator + "{" + liststr + "}"
 
 
 
@@ -218,26 +226,14 @@ class modifier_template():
 
 
 class nestable():
-    def __init__(self, tag, evaluator, value):
+    def __init__(self, tag="FAILURE", evaluator="=", values=[]):
         self.tag = tag
-        self.values = []
+        self.values = values
         self.evaluator = evaluator
 
     def __repr__(self):
-        repstring = ""
-        repstring += self.tag + " " + self.evaluator
-        if len(self.values) == 1:
-            repstring += str(self.values[0])
-
-        else:
-            repstring += "{\n"
-            for value in self.values:
-                repstring += value
-
-            repstring += "}\n"
-
-
-        return repstring
+        liststr = str(self.values)
+        return self.tag + " : {" + liststr + " } "
 
 
     @staticmethod
