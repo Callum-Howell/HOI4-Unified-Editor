@@ -28,7 +28,12 @@ class event_file():
             yield event
 
     def __getitem__(self, item):
-        return self.event_list[item]
+        if type(item) is int:
+            return self.event_list[item]
+        elif type(item) is str:
+            for event in self.event_list:
+                if event.id == item:
+                    return event
 
     def export(self):
         exportstr = ""
@@ -125,7 +130,7 @@ class event():
             elif substatement.tag == "show_major":
                 export_obj.showmajor = substatement.values[0]
             elif substatement.tag == "immediate":
-                export_obj.immediate = option.parse(inputstatement)
+                export_obj.immediate = option.parse(substatement)
 
 
         export_obj.create_raw_text()
@@ -142,13 +147,13 @@ class event():
         for title in self.title:
             title_text = title.export()
             for line in title_text.splitlines():
-                self.rawtext += "\t" + line
+                self.rawtext += "\t" + line + "\n"
             self.rawtext += "\t\n"
 
         for desc in self.desc:
             desc_text = desc.export()
             for line in desc_text.splitlines():
-                self.rawtext += "\t" + line
+                self.rawtext += "\t" + line + "\n"
             self.rawtext += "\t\n"
 
         if self.picture != "Not Specified":
@@ -178,10 +183,20 @@ class event():
         if self.showmajor != "Not Specified":
             self.rawtext += "\tshow_major = TODO#INCOMPLETE\n"
 
-#        if self.immediate != "Not Specified":
-#            tempstr = str(self.immediate)
-#            self.rawtext += "\timmediate = " + tempstr + "\n"
 
+
+        for exporting_option in self.options:
+            opt_text = exporting_option.export()
+            for line in opt_text.splitlines():
+                self.rawtext += "\t" + line + "\n"
+            self.rawtext += "\t}\n"
+
+        # if self.immediate is not None:
+        #     self.rawtext += "\timmediate = "
+        #     immediate_str = self.immediate.export()
+        #     for line in immediate_str.splitlines():
+        #         self.rawtext += "\t" + line + "\n"
+        #     self.rawtext += "\t}\n"
 
         self.rawtext += "\n}\n"
 
@@ -209,6 +224,35 @@ class option():
     def __repr__(self):
         return "[O]" + self.name
 
+    def export(self):
+        exportstr = "option = {\n"
+
+        exportstr += f"\tname = {self.name}"
+
+        if len(self.ai_chance) != 0:
+            exportstr += "\tai_chance = {\n"
+            for chance_statement in self.ai_chance:
+                exportstr += chance_statement.export()
+            exportstr += "\n}"
+
+        if len(self.effects) != 0:
+            for effects_statement in self.effects:
+                exportstr += "\n"
+                effects_str = effects_statement.export()
+                for line in effects_str.splitlines():
+                    exportstr += "\t" + line + "\n"
+                exportstr += "\n"
+
+        exportstr += ""
+        if self.empty_hidden is True:
+            exportstr += f"\tempty_hidden = yes\n"
+        if self.original_recipient_only is True:
+            exportstr += f"\toriginal_recipient_only = yes\n"
+
+        exportstr += "\n}"
+
+        return exportstr
+
     @staticmethod
     def parse(inputstatement):
         export_obj = option()
@@ -234,7 +278,6 @@ class option():
                             chance_statement = nestable.parse(sub_nestable)
                             chance_list.append(chance_statement)
                     export_obj.ai_chance = chance_list
-
                 else:
                     effects_list.append(nestable.parse(substatement))
         export_obj.effects = effects_list
@@ -267,12 +310,17 @@ class event_description():
 
     def export(self):
         exportstr = ""
-        if type(self.trigger_list) is None:
+        if len(self.trigger_list) == 0:
             exportstr += "desc = " + self.text
         else:
             exportstr += "desc = {\n\n"
             exportstr += "text = " + self.text + "\n"
-            exportstr += "trigger = TO BE COMPLETED"
+            if len(self.trigger_list) != 0:
+                exportstr += "trigger = {\n"
+                for sub_trigger in self.trigger_list:
+                    exportstr += "\t"
+                    exportstr += sub_trigger.export()
+                exportstr += "}\n"
             exportstr += "\n}\n"
         return exportstr
 
@@ -288,9 +336,17 @@ class title():
         if self.trigger_list is None:
             exportstr += "title = " + self.text
         else:
-            exportstr += "title = {\n\n"
-            exportstr += "TO BE COMPLETED"
-            exportstr += "\n}\n"
+            exportstr += "title = "
+
+            if len(self.trigger_list) == 0:
+                exportstr += self.text
+            else:
+                exportstr += "{\n"
+                for trigger_statement in self.trigger_list:
+                    trigger_str = trigger_statement.export()
+                    for line in trigger_str.splitlines():
+                        exportstr += "\t" + line + "\n"
+                exportstr += "\n}\n"
 
         return exportstr
 

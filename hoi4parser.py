@@ -264,7 +264,35 @@ class nestable():
 
     def export(self):
         exportstr = ""
-        exportstr += self.tag + " " + self.evaluator + " " + "TO BE COMPLETED"
+
+        exportstr += self.tag + " " + self.evaluator + " "
+
+        if len(self.values) == 0:
+            exportstr += "{}"
+        elif len(self.values) > 0 and (type(self.values[0]) is str or type(self.values[0]) is bool or type(self.values[0]) is int):
+            if type(self.values[0]) is bool:
+                if self.values[0] is True:
+                    exportstr += "yes"
+                if self.values[0] is False:
+                    exportstr += "no"
+            elif type(self.values[0]) is str:
+                exportstr += self.values[0]
+            elif type(self.values[0]) is int:
+                exportstr += str(self.values[0])
+        else:
+            for value in self.values:
+                sub_string = ""
+                if type(value) is nestable or type(value) is modifier or type(value) is command or type(value) is trigger or type(value) is scope:
+                    sub_string = value.export()
+                    exportstr += sub_string
+                elif value is None:
+                    sub_string += ""
+                else:
+                    sub_string += str(value)
+                exportstr += sub_string
+
+
+        exportstr += "\n}"
 
 
         return exportstr

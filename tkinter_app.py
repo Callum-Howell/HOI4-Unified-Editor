@@ -41,9 +41,9 @@ class app:
 
     def generateeventdisplay(self):
         self.mainwindow.destroy()
-        self.mainwindow = tkinter.Frame(self.master)
-        self.mainwindow.grid()
-        eventdisplayinstance = event_editor_frame(self.mainwindow, self, self.mod.eventfileslist)
+        self.mainwindow = tkinter.Frame(self.master, bd=5)
+        self.mainwindow.grid(sticky="NSEW")
+        eventdisplayinstance = event_editor_frame(self.mainwindow, self, self.mod.event_files_dict)
 
     def generatecountrydisplay(self):
         self.mainwindow.destroy()
@@ -87,10 +87,10 @@ class app:
 
 
 class editor_frame:
-    def __init__(self, main_window, app, infolist, identifier):
+    def __init__(self, main_window, app, infolist):
         self.mainwindow = main_window
         self.app = app
-        self.opsbar = ops_bar(self, self.mainwindow, self.app, infolist, identifier)
+        self.opsbar = ops_bar(self, self.mainwindow, self.app, infolist)
 
     def load(self, ideology_choice):
         del self.info_display
@@ -127,7 +127,7 @@ class ideology_info:
 
 class country_editor_frame(editor_frame):
     def __init__(self, mainwindow, app, country_list):
-        super().__init__(mainwindow, app, country_list, "tag")
+        super().__init__(mainwindow, app, country_list)
 
         self.info_frame = tkinter.Frame(self.mainwindow)
         self.info_frame.grid(row=1, column=0)
@@ -144,7 +144,7 @@ class country_editor_frame(editor_frame):
 
 
 class ops_bar:
-    def __init__(self, master_object, displayframe, app, choice_source, ident_attr):
+    def __init__(self, master_object, displayframe, app, choice_source):
         self.app = app
         self.opsframe = tkinter.Frame(displayframe, bd=3)
         self.displayframe = displayframe
@@ -153,27 +153,49 @@ class ops_bar:
 
         vallist = []
         for choice in choice_source:
-            vallist.append(getattr(choice, ident_attr))
+            vallist.append(choice)
 
         self.selector = tkinter.ttk.Combobox(self.opsframe, values=vallist)
         self.selector.insert(0, vallist[0])
         self.selector.grid(row=0, column=0)
 
-        self.loadbutton = tkinter.Button(self.opsframe, text="Load", command=self.load_choice)
-        self.loadbutton.grid(row=0, column=1)
+        self.new_button = tkinter.Button(self.opsframe, text="New", command=self.new_file)
+        self.new_button.grid(row=0, column=1)
+
+        self.load_button = tkinter.Button(self.opsframe, text="Load", command=self.load_choice)
+        self.load_button.grid(row=0, column=3)
+
+        self.save_button = tkinter.Button(self.opsframe, text="Save", command=self.save_choice)
+        self.save_button.grid(row=0, column=2)
+
+        self.rename_button = tkinter.Button(self.opsframe, text="Re-Name", command=self.rename_file)
+        self.rename_button.grid(row=0, column=4)
+
+        self.preview_button = tkinter.Button(self.opsframe, text="Preview", command=self.preview_file)
+        self.preview_button.grid(row=0, column=5)
 
     def load_choice(self):
         choice = self.selector.get()
         self.master_object.load(choice)
 
-    def new_obj(self):
-        pass
+    def new_file(self):
+        self.master_object.new()
 
-    def save_obj(self):
+    def rename_file(self):
+        self.master_object.rename()
+
+    def save_choice(self):
+        choice = self.selector.get()
+        self.master_object.save(choice)
+
+    def preview_file(self):
         pass
 
     def get(self):
         return self.selector.get()
+
+    def preview(self):
+        self.master_object.preview()
 
 
 class country_info_frame(base_info_frame):
@@ -205,34 +227,44 @@ class country_info_frame(base_info_frame):
 
 
 class event_editor_frame(editor_frame):
-    def __init__(self, mainwindow, app, mod_event_files_list):
-        super().__init__(mainwindow, app, mod_event_files_list, "name")
+    def __init__(self, mainwindow, app, mod_event_files_dict):
+        super().__init__(mainwindow, app, mod_event_files_dict)
         self.app = app
         self.mainwindow = mainwindow
 
 
         self.sub_display_frame = tkinter.Frame(self.mainwindow)
-        self.sub_display_frame.grid(row=0, column=0)
+        self.sub_display_frame.grid(row=0, column=0, sticky="NSEW")
 
-        self.load(mod_event_files_list[0].name)
+        self.load([*mod_event_files_dict][0])
 
     def load(self, choice_name):
         self.sub_display_frame.destroy()
         self.sub_display_frame = tkinter.Frame(self.mainwindow)
         self.sub_display_frame.grid(row=1, column=0)
 
-        for event_file in self.app.mod.eventfileslist:
-            if event_file.name == choice_name:
-                selected_event_file = event_file
-        self.info_frame = event_file_info_frame(self.sub_display_frame, selected_event_file, self.app)
+        for event_file in self.app.mod.event_files_dict:
+            if event_file == choice_name:
+                selected_event_file = self.app.mod.event_files_dict[event_file]
+
+        self.mapper = ui_mapper(selected_event_file)
+
+        self.info_frame = event_file_info_frame(self.sub_display_frame, selected_event_file, self.app, self.mapper)
+
+    def new(self):
+        pass
+
+    def save(self, choice_name):
+        self.app.mod.event_files_dict[choice_name] = self.mapper.create_new_object()
+
 
 
 class event_file_info_frame(base_info_frame):
-    def __init__(self, master, event_file, app):
+    def __init__(self, master, event_file, app, mapper):
         super().__init__(master, app, event_file)
 
         self.loaded_event_file = event_file
-        self.mapper = ui_mapper(self.loaded_event_file)
+        self.mapper = mapper
 
         self.event_selector = event_selector_box(self.info_frame, app, self, self.mapper)
         self.app = app
@@ -253,15 +285,25 @@ class event_file_info_frame(base_info_frame):
         self.event_notebook_frame.grid(row=0, column=1, sticky="NSEW")
 
         self.event_notebook = ttk.Notebook(self.event_notebook_frame)
-        self.event_notebook.grid()
+        self.event_notebook.grid(sticky="NSEW")
 
         # Main Info
 
-        self.basic_info_frame = tkinter.Frame(self.event_notebook)
+        self.basic_info_frame = tkinter.Frame(self.event_notebook, bd=3)
         self.basic_info_frame.grid()
 
-        self.id_label = tkinter.Label(self.basic_info_frame, text="ID")
-        self.id_label.grid(row=0, column=0)
+        self.id_box = text_var_entry(self.basic_info_frame, "ID", self.mapper["event_list"][self.event_selector.selection]["id"], 0)
+
+
+        # Titles
+
+        self.title_frame = tkinter.LabelFrame(self.basic_info_frame, bd=1, relief="solid", text="Titles")
+        self.title_frame.grid(row=1, column=0)
+
+        rowcount = 0
+        for title in self.mapper["event_list"][self.event_selector.selection]["title"]:
+            title_box = text_var_entry(self.title_frame, rowcount, title["text"], rowcount)
+            rowcount += 1
 
         self.event_notebook.add(self.basic_info_frame, text="Basic")
 
@@ -269,6 +311,18 @@ class event_file_info_frame(base_info_frame):
 
         self.trigger_frame = tkinter.Frame(self.event_notebook)
         self.trigger_frame.grid()
+
+        self.triggered_only_button = tkinter.Checkbutton(self.trigger_frame, text="Is Triggered Only", variable=self.mapper["event_list"][self.event_selector.selection]["triggered_only"])
+        self.triggered_only_button.grid(row=0, column=0)
+
+        self.static_trigger_frame = tkinter.LabelFrame(self.trigger_frame, text="Exclusive Triggers", bd=1, relief="solid")
+        self.static_trigger_frame.grid(row=1, column=0)
+
+        self.mtth_frame = tkinter.LabelFrame(self.trigger_frame, text="Mean Time To Happen", bd=1,
+                                                       relief="solid")
+        self.mtth_frame.grid(row=2, column=0)
+
+        self.base_editor = int_var_entry(self.mtth_frame, "Base", self.mapper["event_list"][self.event_selector.selection]["mtth"], 0)
 
 
         self.event_notebook.add(self.trigger_frame, text="Triggers")
@@ -288,11 +342,11 @@ class event_file_info_frame(base_info_frame):
         event_keys = []
 
         for event_key in self.mapper["event_list"][self.event_selector.selection]["title"]:
-            event_keys.append(event_key["text"])
+            event_keys.append(event_key["text"].get())
         for event_key in self.mapper["event_list"][self.event_selector.selection]["desc"]:
-            event_keys.append(event_key["text"])
+            event_keys.append(event_key["text"].get())
         for event_key in self.mapper["event_list"][self.event_selector.selection]["options"]:
-            event_keys.append(event_key["name"])
+            event_keys.append(event_key["name"].get())
 
         self.loc_editor = localisation_editor(self.localisations_frame, event_keys, self.app)
 
@@ -302,6 +356,19 @@ class event_file_info_frame(base_info_frame):
         self.event_notebook.add(self.localisations_frame, text="Localisations")
 
         # Raw Text
+
+        self.raw_text_frame = tkinter.Frame(self.event_notebook)
+
+        self.raw_text_box = tkinter.Text(self.raw_text_frame)
+        self.raw_text_box.insert(0.0, self.mapper["event_list"][self.event_selector.selection]["rawtext"].get())
+        self.raw_text_box.grid()
+
+        self.event_notebook.add(self.raw_text_frame, text="Raw Text")
+
+    def new_event(self):
+        pass
+
+
 
 class event_selector_box:
     def __init__(self, master, app, eventdisplay, mapper):
@@ -313,13 +380,13 @@ class event_selector_box:
         self.selection = 0
 
         self.eventselectorframe = tkinter.Frame(master, bd=3, relief=tkinter.RAISED)
-        self.eventselectorframe.grid(row=0, column=0, sticky="NW")
+        self.eventselectorframe.grid(row=0, column=0, sticky="NSEW")
 
         self.list_label = tkinter.Label(self.eventselectorframe, text="Event List")
         self.list_label.grid(row=0, column=0)
 
         self.selector_box = tkinter.Listbox(self.eventselectorframe, selectmode=tkinter.SINGLE)
-        self.selector_box.grid(row=1, column=0)
+        self.selector_box.grid(row=1, column=0, sticky="NS")
 
         self.event_control_box = tkinter.Frame(self.eventselectorframe)
         self.event_control_box.grid(row=2, column=0)
@@ -335,7 +402,7 @@ class event_selector_box:
 
 
         for event_map in self.mapper["event_list"]:
-            self.selector_box.insert(tkinter.END, event_map["id"])
+            self.selector_box.insert(tkinter.END, event_map["id"].get())
 
 
     def load(self):
@@ -346,6 +413,45 @@ class event_selector_box:
 
         self.eventdisplay.load(self.mapper["event_list"][self.selection])
 
+class tk_var_widgit:
+    def __init__(self, master, label, var, rowcount):
+        self.var_frame = tkinter.Frame(master)
+        self.var_frame.grid(row=rowcount, column = 0)
+
+        self.var_label = tkinter.Label(self.var_frame, text=label)
+        self.var_label.grid(row=0, column=0)
+
+        self.var = None
+
+    def get(self):
+        return self.var.get()
+
+class text_var_entry(tk_var_widgit):
+    def __init__(self, master, label, var, rowcount):
+        super().__init__(master, label, var, rowcount)
+        self.var = var
+        self.text_entry = tkinter.Entry(self.var_frame, textvariable=self.var, width=30)
+        self.text_entry.grid(row=0, column=1)
+
+class bool_var_button(tk_var_widgit):
+    def __init__(self, master, label, var, rowcount):
+        super().__init__(master, label, var, rowcount)
+        self.var = var
+
+class int_var_entry(tk_var_widgit):
+    def __init__(self, master, label, var, rowcount):
+        super().__init__(master, label, var, rowcount)
+        self.var = var
+        self.int_entry = tkinter.Spinbox(self.var_frame, textvariable=self.var, width=30)
+        self.int_entry.grid(row=0, column=1)
+
+class nestable_editor:
+    def __init__(self):
+        pass
+
+class nestable_frame:
+    def __init__(self):
+        pass
 
 class localisation_editor:
     def __init__(self, master, keys, app):
@@ -443,7 +549,7 @@ class localisation_editor:
 class mod_file:
     def __init__(self, directory):
         self.directory = directory
-        self.eventfileslist = []
+        self.event_files_dict = {}
         self.ideology_list = []
 
         self.ideology_load()
@@ -453,7 +559,8 @@ class mod_file:
             opener = open(fileloc, mode="r", encoding="utf-8-sig")
             rawfilestring = opener.read()
 
-            self.eventfileslist.append(event_file.parse(rawfilestring, eventfileloc))
+            temp_file = event_file.parse(rawfilestring, eventfileloc)
+            self.event_files_dict[temp_file.name] = temp_file
 
         self.locfileslist = []
         for locfileloc in os.listdir(directory + "\localisation\\"):
@@ -538,25 +645,22 @@ class ui_mapper:
     def __getitem__(self, item):
         selection = self.attribute_mapper[item]
         if type(selection) == tkinter.StringVar or type(selection) == tkinter.BooleanVar or type(selection) == tkinter.IntVar:
-            return self.attribute_mapper[item].get()
+            return self.attribute_mapper[item]
         else:
             return self.attribute_mapper[item]
 
     def __setitem__(self, key, value):
         selection = self.attribute_mapper[key]
         if type(selection) == tkinter.StringVar or type(selection) == tkinter.BooleanVar or type(selection) == tkinter.IntVar:
-            return self.attribute_mapper[key].set(value)
+            return self.attribute_mapper[key]
         else:
-            return self.attribute_mapper[key].set(value)
+            return self.attribute_mapper[key]
 
     def create_new_object(self):
         export_object = self.obj_type()
 
         for attribute in self.attribute_mapper.items():
-            print(attribute)
-            if attribute[0] == "obj_type":
-                pass
-            elif type(attribute[1]) is list:
+            if type(attribute[1]) is list:
                 input_list = []
                 for value in attribute[1]:
                     if type(value) is ui_mapper:
@@ -566,6 +670,8 @@ class ui_mapper:
                 setattr(export_object, attribute[0], input_list)
             elif type(attribute[1]) is ui_mapper:
                 setattr(export_object, attribute[0], attribute[1].create_new_object())
+            elif type(attribute[1]) is tkinter.StringVar or type(attribute[1]) is tkinter.IntVar or type(attribute[1]) is tkinter.BooleanVar:
+                setattr(export_object, attribute[0], attribute[1].get())
             else:
                 setattr(export_object, attribute[0], attribute[1])
 
@@ -581,6 +687,7 @@ def savecheck(func):
 #
 
 root = tkinter.Tk()
+#root.state("zoomed")
 
 main_app = app(root)
 
