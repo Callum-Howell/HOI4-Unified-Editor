@@ -76,14 +76,14 @@ class event():
         self.options = []
         self.triggers = []
         self.mtth = "Not Specified"
-        self.fireonlyonce = "Not Specified"
+        self.fireonlyonce = False
         self.triggered_only = False
         self.timeout = "Not Specified"
-        self.fireforsender = "Not Specified"
+        self.fireforsender = True
         self.hidden = False
-        self.exclusive = "Not Specified"
-        self.major = "Not Specified"
-        self.showmajor = "Not Specified"
+        self.exclusive = False
+        self.major = False
+        self.showmajor = False
         self.immediate = None
 
     @staticmethod
@@ -159,44 +159,45 @@ class event():
         if self.picture != "Not Specified":
             self.rawtext += "\tpicture = " + self.picture + "\n"
 
-        if self.fireonlyonce != "Not Specified":
+        if self.fireonlyonce is True:
             self.rawtext += "\tfire_only_once = yes\n"
 
-        if self.triggered_only != False:
+        if self.triggered_only is True:
             self.rawtext += "\tis_triggered_only = yes\n"
 
         if self.timeout != "Not Specified":
-            self.rawtext += "\ttimeout_days = " + self.timeout + "\n"
+            self.rawtext += "\ttimeout_days = " + str(self.timeout) + "\n"
 
-        if self.fireforsender != "Not Specified":
-            self.rawtext += "\tfire_for_sender = " + self.fireforsender + "\n"
+        if self.fireforsender is True:
+            self.rawtext += "\tfire_for_sender = yes\n"
 
-        if self.hidden != False:
+        if self.hidden is True:
             self.rawtext += "\thidden = yes\n"
 
-        if self.exclusive != "Not Specified":
-            self.rawtext += "\texclusive = " + self.exclusive + "\n"
+        if self.exclusive is True:
+            self.rawtext += "\texclusive = yes\n"
 
-        if self.major != "Not Specified":
-            self.rawtext += "\tmajor = " + self.major + "\n"
+        if self.major is True:
+            self.rawtext += "\tmajor = yes" + "\n"
 
-        if self.showmajor != "Not Specified":
-            self.rawtext += "\tshow_major = TODO#INCOMPLETE\n"
+        if self.showmajor is True:
+            self.rawtext += "\tshow_major = yes\n"
 
 
+        if len(self.options) > 0:
+            for exporting_option in self.options:
+                opt_text = exporting_option.export()
+                for line in opt_text.splitlines():
+                    self.rawtext += "\t" + line + "\n"
+            self.rawtext += "\t}"
 
-        for exporting_option in self.options:
-            opt_text = exporting_option.export()
-            for line in opt_text.splitlines():
-                self.rawtext += "\t" + line + "\n"
-            self.rawtext += "\t}\n"
-
-        # if self.immediate is not None:
-        #     self.rawtext += "\timmediate = "
-        #     immediate_str = self.immediate.export()
-        #     for line in immediate_str.splitlines():
-        #         self.rawtext += "\t" + line + "\n"
-        #     self.rawtext += "\t}\n"
+#        if self.immediate != None:
+#            self.rawtext += "\timmediate = "
+#            immediate_str = self.immediate.export()
+#            self.rawtext += immediate_str
+#            for line in immediate_str.splitlines():
+#                self.rawtext += "\t" + line + "\n"
+#            self.rawtext += "\t}\n"
 
         self.rawtext += "\n}\n"
 
@@ -233,7 +234,7 @@ class option():
             exportstr += "\tai_chance = {\n"
             for chance_statement in self.ai_chance:
                 exportstr += chance_statement.export()
-            exportstr += "\n}"
+            exportstr += "\n"
 
         if len(self.effects) != 0:
             for effects_statement in self.effects:
@@ -248,8 +249,6 @@ class option():
             exportstr += f"\tempty_hidden = yes\n"
         if self.original_recipient_only is True:
             exportstr += f"\toriginal_recipient_only = yes\n"
-
-        exportstr += "\n}"
 
         return exportstr
 
@@ -301,7 +300,10 @@ class event_description():
                 if substatement.tag == "text":
                     exp_obj.text = substatement.values[0]
                 elif substatement.tag == "trigger":
-                    exp_obj.trigger = nestable.parse(substatement)
+                    temp_list = []
+                    for trigger_statement in substatement.values:
+                        temp_list.append(nestable.parse(trigger_statement))
+                    exp_obj.trigger_list = temp_list
             else:
                 exp_obj.text = substatement
 

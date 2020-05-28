@@ -283,8 +283,7 @@ class nestable():
             for value in self.values:
                 sub_string = ""
                 if type(value) is nestable or type(value) is modifier or type(value) is command or type(value) is trigger or type(value) is scope:
-                    sub_string = value.export()
-                    exportstr += sub_string
+                    sub_string += " {\n" + value.export() + "}\n"
                 elif value is None:
                     sub_string += ""
                 else:
@@ -292,7 +291,8 @@ class nestable():
                 exportstr += sub_string
 
 
-        exportstr += "\n}"
+
+        exportstr += "\n"
 
 
         return exportstr

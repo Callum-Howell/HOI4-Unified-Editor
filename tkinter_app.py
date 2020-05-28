@@ -1,11 +1,8 @@
-from events import *
 import tkinter
 from tkinter import ttk
 import os
-from localisation import *
 from PIL import Image, ImageTk
-from ideologies import *
-from countries import *
+from mod import *
 import exceptions
 
 # Classes
@@ -546,71 +543,6 @@ class localisation_editor:
 
             rowcounter += 1
 
-class mod_file:
-    def __init__(self, directory):
-        self.directory = directory
-        self.event_files_dict = {}
-        self.ideology_list = []
-
-        self.ideology_load()
-
-        for eventfileloc in os.listdir(directory + "\events\\"):
-            fileloc = directory + "\events" + "\\" + eventfileloc
-            opener = open(fileloc, mode="r", encoding="utf-8-sig")
-            rawfilestring = opener.read()
-
-            temp_file = event_file.parse(rawfilestring, eventfileloc)
-            self.event_files_dict[temp_file.name] = temp_file
-
-        self.locfileslist = []
-        for locfileloc in os.listdir(directory + "\localisation\\"):
-            fileloc = directory + "\localisation" + "\\" + locfileloc
-            opener = open(fileloc, mode="r", encoding="utf-8-sig")
-            rawfilestring = opener.read()
-
-            self.locfileslist.append(localisation_file(rawfilestring, locfileloc))
-
-        self.countryload()
-
-    def loclookup(self, key):
-        langdict = {}
-        for locfile in self.locfileslist:
-            for loc in locfile.loc_dict.keys():
-                if loc == key:
-                    langdict[locfile.file_lang] = locfile.loc_dict[key]
-
-        return langdict
-
-    def ideology_load(self):
-        if "common" in os.listdir(self.directory):
-            if "ideologies" in os.listdir(self.directory + "\common"):
-                for idfile in os.listdir(self.directory + "\common\ideologies"):
-                    id_directory = self.directory + "\common\ideologies\\" + idfile
-                    opener = open(id_directory, mode="r", encoding="utf-8-sig")
-                    rawfilestring = opener.read()
-                    parsedideologies = ideologyfile(rawfilestring)
-                    for loaded_ideology in parsedideologies.ideologies:
-                        self.ideology_list.append(loaded_ideology)
-
-    def countryload(self):
-        tagloc = self.directory + "\common\country_tags\\"
-        self.countrylist = []
-        for tagfile in os.listdir(tagloc):
-            fileloc = tagloc + tagfile
-            opener = open(fileloc, mode="r", encoding="utf-8")
-            rawfilestring = opener.read()
-            tagsearchexpression = re.compile("([A-Z]|[0-9]){3}.+=.+\"countries/.+.txt\"")
-            filesearchexpression = re.compile("countries/.+.txt")
-
-            for tagfind in tagsearchexpression.finditer(rawfilestring):
-                tagfilestring = tagfind.group()
-                for countryfile in os.listdir(self.directory + "\history\countries\\"):
-                    if countryfile[:3] == tagfilestring[:3]:
-                        fileloc = (self.directory + "\history\countries\\" + countryfile)
-                        fileopener = open(fileloc, mode="r", encoding="utf-8-sig")
-                        filereader = fileopener.read()
-                        self.countrylist.append(country(filereader, countryfile[:3]))
-
 class ui_mapper:
     def __init__(self, object):
         self.obj_type = type(object)
@@ -649,12 +581,6 @@ class ui_mapper:
         else:
             return self.attribute_mapper[item]
 
-    def __setitem__(self, key, value):
-        selection = self.attribute_mapper[key]
-        if type(selection) == tkinter.StringVar or type(selection) == tkinter.BooleanVar or type(selection) == tkinter.IntVar:
-            return self.attribute_mapper[key]
-        else:
-            return self.attribute_mapper[key]
 
     def create_new_object(self):
         export_object = self.obj_type()
