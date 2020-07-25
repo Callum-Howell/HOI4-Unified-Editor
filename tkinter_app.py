@@ -46,13 +46,13 @@ class app:
         self.mainwindow.destroy()
         self.mainwindow = tkinter.Frame(self.master)
         self.mainwindow.grid()
-        countrydisplayinstance = country_editor_frame(self.mainwindow, self, self.mod.countrylist)
+        countrydisplayinstance = country_editor_frame(self.mainwindow, self, self.mod.country_dict)
 
     def generate_ideology_display(self):
         self.mainwindow.destroy()
         self.mainwindow = tkinter.Frame(self.master)
         self.mainwindow.grid()
-        ideologydisplayinstance = ideology_editor_frame(self.mainwindow, self, self.mod.ideology_list)
+        ideologydisplayinstance = ideology_editor_frame(self.mainwindow, self, self.mod.ideology_dict)
 
     def addmenus(self):
         self.mainmenubar = tkinter.Menu(self.master)
@@ -108,7 +108,7 @@ class base_info_frame:
 
 class ideology_editor_frame(editor_frame):
     def __init__(self, mainwindow, app, ideology_list):
-        super().__init__(mainwindow, app, ideology_list, "name")
+        super().__init__(mainwindow, app, ideology_list)
         self.info_display = ideology_info(self.mainwindow, self.app, self.opsbar.selector.get())
 
 
@@ -116,10 +116,6 @@ class ideology_info:
     def __init__(self, infoframe, app, selection):
         self.infoframe = tkinter.Frame(infoframe)
         self.infoframe.grid(row=1, column=0, sticky="NSEW")
-
-        for id_check in app.mod.ideology_list:
-            if id_check.name == selection:
-                selected_ideology = id_check
 
 
 class country_editor_frame(editor_frame):
@@ -134,10 +130,8 @@ class country_editor_frame(editor_frame):
         self.info_frame.destroy()
         self.info_frame = tkinter.Frame(self.mainwindow)
         self.info_frame.grid(row=1, column=0)
-        for country in self.app.mod.countrylist:
-            if country.tag == choice:
-                selectedcountry = country
-        self.infodisplay = country_info_frame(self.info_frame, self.app, selectedcountry)
+
+        self.infodisplay = country_info_frame(self.info_frame, self.app, self.app.mod.country_dict[choice])
 
 
 class ops_bar:
@@ -253,6 +247,7 @@ class event_editor_frame(editor_frame):
 
     def save(self, choice_name):
         self.app.mod.event_files_dict[choice_name] = self.mapper.create_new_object()
+        self.load([*self.app.mod.event_files_dict][0])
 
 
 
@@ -382,7 +377,7 @@ class event_selector_box:
         self.list_label = tkinter.Label(self.eventselectorframe, text="Event List")
         self.list_label.grid(row=0, column=0)
 
-        self.selector_box = tkinter.Listbox(self.eventselectorframe, selectmode=tkinter.SINGLE)
+        self.selector_box = tkinter.Listbox(self.eventselectorframe, selectmode=tkinter.BROWSE)
         self.selector_box.grid(row=1, column=0, sticky="NS")
 
         self.event_control_box = tkinter.Frame(self.eventselectorframe)
@@ -401,8 +396,9 @@ class event_selector_box:
         for event_map in self.mapper["event_list"]:
             self.selector_box.insert(tkinter.END, event_map["id"].get())
 
+        self.selector_box.bind('<Double-Button>', self.load)
 
-    def load(self):
+    def load(self, *args):
         if len(self.selector_box.curselection()) == 0:
             self.selection = 0
         else:
@@ -544,12 +540,21 @@ class localisation_editor:
             rowcounter += 1
 
 class ui_mapper:
+    """The UI Mapper coordinates between a Tkinter window and and the python object it edits."""
     def __init__(self, object):
+        """Takes an existing python object and creates a mirrored version with Tkinter variables for its attributes.
+
+            Ints, Booleans, and Strings are represented with TkinterVars.
+
+            For all other classes, a sub-ui_mapper is created.
+        """
         self.obj_type = type(object)
         self.attribute_mapper = {}
 
         for attribute_key, attribute_value in vars(object).items():
-            if type(attribute_value) is bool:
+            if attribute_value is None:
+                self.attribute_mapper[attribute_key] = None
+            elif type(attribute_value) is bool:
                 self.attribute_mapper[attribute_key] = tkinter.BooleanVar()
                 self.attribute_mapper[attribute_key].set(attribute_value)
 
@@ -562,7 +567,9 @@ class ui_mapper:
                 self.attribute_mapper[attribute_key].set(attribute_value)
 
             elif type(attribute_value) is statement:
+                print(attribute_key, attribute_value)
                 raise exceptions.StatementError
+
             elif type(attribute_value) is list:
                 input_list = []
                 for list_variable in attribute_value:
@@ -574,6 +581,9 @@ class ui_mapper:
                         input_list.append(ui_mapper(list_variable))
                 self.attribute_mapper[attribute_key] = input_list
 
+            else:
+                self.attribute_mapper[attribute_key] = ui_mapper(attribute_value)
+
     def __getitem__(self, item):
         selection = self.attribute_mapper[item]
         if type(selection) == tkinter.StringVar or type(selection) == tkinter.BooleanVar or type(selection) == tkinter.IntVar:
@@ -583,8 +593,9 @@ class ui_mapper:
 
 
     def create_new_object(self):
-        export_object = self.obj_type()
+        """Returns an object with the attributes that now exist"""
 
+        export_object = self.obj_type()
         for attribute in self.attribute_mapper.items():
             if type(attribute[1]) is list:
                 input_list = []

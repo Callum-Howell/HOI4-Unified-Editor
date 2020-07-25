@@ -8,7 +8,8 @@ class mod_file:
     def __init__(self, directory):
         self.directory = directory
         self.event_files_dict = {}
-        self.ideology_list = []
+        self.ideology_dict = {}
+        self.country_dict = {}
 
         self.ideology_load()
 
@@ -45,13 +46,13 @@ class mod_file:
                     id_directory = self.directory + "\common\ideologies\\" + idfile
                     opener = open(id_directory, mode="r", encoding="utf-8-sig")
                     rawfilestring = opener.read()
-                    parsedideologies = ideologyfile(rawfilestring)
+                    parsedideologies = ideologyfile.parse(rawfilestring)
                     for loaded_ideology in parsedideologies.ideologies:
-                        self.ideology_list.append(loaded_ideology)
+                        self.ideology_dict[loaded_ideology.name] = loaded_ideology
 
     def countryload(self):
         tagloc = self.directory + "\common\country_tags\\"
-        self.countrylist = []
+        self.country_dict = {}
         for tagfile in os.listdir(tagloc):
             fileloc = tagloc + tagfile
             opener = open(fileloc, mode="r", encoding="utf-8")
@@ -66,4 +67,4 @@ class mod_file:
                         fileloc = (self.directory + "\history\countries\\" + countryfile)
                         fileopener = open(fileloc, mode="r", encoding="utf-8-sig")
                         filereader = fileopener.read()
-                        self.countrylist.append(country(filereader, countryfile[:3]))
+                        self.country_dict[countryfile[:3]] = country.parse(filereader, countryfile[:3])

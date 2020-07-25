@@ -75,7 +75,7 @@ class event():
         self.picture = "Not Specified"
         self.options = []
         self.triggers = []
-        self.mtth = "Not Specified"
+        self.mtth = None
         self.fireonlyonce = False
         self.triggered_only = False
         self.timeout = "Not Specified"
@@ -316,9 +316,9 @@ class event_description():
             exportstr += "desc = " + self.text
         else:
             exportstr += "desc = {\n\n"
-            exportstr += "text = " + self.text + "\n"
+            exportstr += "\ttext = " + self.text + "\n"
             if len(self.trigger_list) != 0:
-                exportstr += "trigger = {\n"
+                exportstr += "\ttrigger = {\n"
                 for sub_trigger in self.trigger_list:
                     exportstr += "\t"
                     exportstr += sub_trigger.export()
@@ -376,7 +376,16 @@ class mean_time_to_happen:
         self.modifiers = modifier_list
 
     def export(self):
-        print("MTTH = UNFINISHED")
+        export_str = "\tmean_time_to_happen = {\n"
+
+        export_str += f"days = {self.base}\n"
+
+        for modifier in self.modifiers:
+            export_str += "\n"
+            export_str += modifier.export()
+            export_str += "\n"
+
+        export_str += "\n}\n"
 
     @staticmethod
     def parser(input_statement):

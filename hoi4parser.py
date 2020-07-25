@@ -1,5 +1,6 @@
 import re
 import csv
+import json
 
 
 #
@@ -181,14 +182,27 @@ def nestify(blocklist):
 
     return nestedlist
 
+class game_object:
+    """Generic object that represents any structure found within the mod/game files. Used to implement common processes"""
+    def __init__(self):
+        pass
+
+    def export(self):
+        pass
 
 class scope_template():
     def __init__(self, name, description, examplestring, trigger, effect, fromscope, toscope, version):
         self.name = name
         self.description = description
         self.example = examplestring
-        self.trigger = trigger
-        self.eeffect = effect
+        if trigger == "y":
+            self.trigger_check_possible = True
+        else:
+            self.trigger_check_possible = False
+        if effect == "y":
+            self.effect_possible = True
+        else:
+            self.effect_possible = False
         self.fromscope = fromscope
         self.toscope = toscope
         self.version = version
@@ -248,6 +262,7 @@ class nestable():
             exp_object = modifier("", [], "=", MODIFIER_TEMPLATES[inputstatement.tag])
         else:
             exp_object = nestable("", [], "=")
+            print(f"UNCLASSIFIED, {inputstatement.tag}")
 
         exp_object.tag = inputstatement.tag
         exp_object.values = []
@@ -265,7 +280,7 @@ class nestable():
     def export(self):
         exportstr = ""
 
-        exportstr += self.tag + " " + self.evaluator + " "
+        exportstr += "\t" + self.tag + " " + self.evaluator + " "
 
         if len(self.values) == 0:
             exportstr += "{}"
@@ -280,15 +295,20 @@ class nestable():
             elif type(self.values[0]) is int:
                 exportstr += str(self.values[0])
         else:
+            exportstr += "{\n"
             for value in self.values:
                 sub_string = ""
                 if type(value) is nestable or type(value) is modifier or type(value) is command or type(value) is trigger or type(value) is scope:
-                    sub_string += " {\n" + value.export() + "}\n"
+                    nest_str = value.export()
+                    for line in nest_str.splitlines():
+                        sub_string += "\t" + line + "\n"
+
                 elif value is None:
                     sub_string += ""
                 else:
                     sub_string += str(value)
                 exportstr += sub_string
+            exportstr += "\t}\n"
 
 
 
