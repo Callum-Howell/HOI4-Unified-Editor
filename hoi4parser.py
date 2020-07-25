@@ -262,7 +262,7 @@ class nestable():
             exp_object = modifier("", [], "=", MODIFIER_TEMPLATES[inputstatement.tag])
         else:
             exp_object = nestable("", [], "=")
-            print(f"UNCLASSIFIED, {inputstatement.tag}")
+            print(f"UNCLASSIFIED, {inputstatement.tag}, [{inputstatement.values}]")
 
         exp_object.tag = inputstatement.tag
         exp_object.values = []
