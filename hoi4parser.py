@@ -191,7 +191,7 @@ class game_object:
         pass
 
 class scope_template():
-    def __init__(self, name, description, examplestring, trigger, effect, fromscope, toscope, version):
+    def __init__(self, name, description, examplestring, trigger, effect, fromscope, toscope, version, hidden=False):
         self.name = name
         self.description = description
         self.example = examplestring
@@ -206,6 +206,7 @@ class scope_template():
         self.fromscope = fromscope
         self.toscope = toscope
         self.version = version
+        self.hidden= hidden
 
 
 class command_template():
@@ -222,12 +223,69 @@ class command_template():
 class trigger_template():
     def __init__(self, name, parameters, example, description, notes, version, scope):
         self.name = name
-        self.parameters = parameters
+        self.parameters = []
+
+        param_list = parameters.split()
+
+        for parameter in param_list:
+            if "£" in parameter:
+                param_optional = True
+                parameter = parameter.replace("£", "")
+            else:
+                param_optional = False
+
+            if "#" in parameter:
+                param_plural = True
+                parameter = parameter.replace("#", "")
+            else:
+                param_plural = False
+
+            if "%" in parameter:
+                param_comparable = True
+                parameter = parameter.replace("%", "")
+            else:
+                param_comparable = False
+
+            if ">" in parameter:
+                param_indented = True
+                parameter = parameter.replace(">", "")
+            else:
+                param_indented = False
+
+            parameter = parameter.replace("!", "")
+            split_param = parameter.split(".")
+            print(parameter, split_param)
+
+            if len(split_param) == 0:
+                self.parameters.append(trigger_param(parameter, param_plural, param_comparable, param_indented, param_optional))
+            else:
+                self.parameters.append(trigger_param(split_param[0], param_plural, param_comparable, param_indented, param_optional, split_param[0]))
+
         self.example = example
         self.description = description
         self.notes = notes
         self.version = version
         self.scope = scope
+
+class trigger_param:
+    def __init__(self, type, plural, comparable, indented, optional, descriptor=None):
+        self.descriptor = descriptor
+        self.plural = plural
+        self.comparable = comparable
+        self.indented = indented
+        self.optional= optional
+        self.descriptor = descriptor
+
+        if type == "boolean":
+            self.param_type = bool
+        elif type == "int":
+            self.param_type = int
+        elif type == "float":
+            self.param_type = float
+        elif type == "str":
+            self.param_type = float
+        else:
+            pass
 
 
 class modifier_template():
@@ -240,10 +298,11 @@ class modifier_template():
 
 
 class nestable():
-    def __init__(self, tag="FAILURE", evaluator="=", values=[]):
+    def __init__(self, tag="FAILURE", evaluator="=", values=[], hidden=False):
         self.tag = tag
         self.values = values
         self.evaluator = evaluator
+        self.hidden = hidden
 
     def __repr__(self):
         liststr = str(self.values)
@@ -260,6 +319,10 @@ class nestable():
             exp_object = trigger("", [], "=", TRIGGER_TEMPLATES[inputstatement.tag])
         elif inputstatement.tag in MODIFIER_TEMPLATES:
             exp_object = modifier("", [], "=", MODIFIER_TEMPLATES[inputstatement.tag])
+        elif inputstatement.tag == "limit":
+            exp_object = limit()
+        elif inputstatement.tag == "random_list":
+            exp_object = random_list()
         else:
             exp_object = nestable("", [], "=")
             print(f"UNCLASSIFIED, {inputstatement.tag}, [{inputstatement.values}]")
@@ -341,6 +404,14 @@ class modifier(nestable):
         super().__init__(tag, value, evaluator)
         self.template = template
 
+class limit(nestable):
+    def __init__(self, tag="limit", evaluator="",  values = [], template=""):
+        super().__init__(tag, values, evaluator)
+
+class random_list(nestable):
+    def __init__(self, tag="limit", evaluator="",  values = [], template=""):
+        super().__init__(tag, values, evaluator)
+
 
 SCOPE_TEMPLATES = {}
 COMMAND_TEMPLATES = {}
@@ -378,6 +449,8 @@ with open("modifiers.csv", newline='') as csvfile:
                                                                      modifier_csv["example"],
                                                                      modifier_csv["modifier_type"],
                                                                      modifier_csv["usage"])
+
+
 
 del (csvfile)
 del (csvreader)

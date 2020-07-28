@@ -13,6 +13,8 @@ class mod_file:
 
         self.ideology_load()
 
+        self.countryload()
+
         for eventfileloc in os.listdir(directory + "\events\\"):
             fileloc = directory + "\events" + "\\" + eventfileloc
             opener = open(fileloc, mode="r", encoding="utf-8-sig")
@@ -29,7 +31,6 @@ class mod_file:
 
             self.locfileslist.append(localisation_file(rawfilestring, locfileloc))
 
-        self.countryload()
 
     def loclookup(self, key):
         langdict = {}

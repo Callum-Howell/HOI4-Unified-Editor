@@ -30,6 +30,8 @@ class country():
                 for tech_statement in statement.values:
                     export_obj.technologies.append(tech_statement)
 
+        SCOPE_TEMPLATES[tag] = scope_template(tag, "Targets a specific country by tag", "FRA = { ... /}", True, False, "anywhere", "country", "1.0", True)
+
         return export_obj
 
 

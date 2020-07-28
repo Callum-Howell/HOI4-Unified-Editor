@@ -13,7 +13,7 @@ random_navy_leader,targets a random naval unit leader owned by the current count
 every_navy_leader,targets every naval unit leader owned by the current country scope,every_navy_leader = { ... },x,y,country,unit leader,1.5,unit leader
 global_every_army_leader,targets every army leader for every country in the world (better to use every_army_leader if you know the country),global_every_army_leader = { ... },x,y,country,unit leader,1.5,unit leader
 overlord,"targets the overlord of the current scope, if current scope is a subject",raj = { overlord = { ... } },y,y,country,country,1.3,country
-tag,targets a specific country by tag,fra = { ... },y,y,anywhere,country,1,country
+TAG,targets a specific country by tag,fra = { ... },y,y,anywhere,country,1,country
 any_country,"targets any country in the world (including the current scope, see any_other_country)",any_country = { ... },y,x,anywhere,country,1,country
 any_country_with_original_tag,targets any country with current scope's original tag,any_country_with_original_tag = { ... },y,x,anywhere,country,1.9,country
 any_neighbor_country,targets any neighboring country of the current scope,any_neighbor_country = { ... },y,x,country,country,1,country
