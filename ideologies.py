@@ -3,7 +3,7 @@ from hoi4parser import *
 
 ###
 
-class ideologyfile():
+class ideologyfile(game_object):
     def __init__(self):
         self.ideologies = []
 
@@ -20,7 +20,7 @@ class ideologyfile():
 
         return export_obj
 
-class ideology():
+class ideology(game_object):
     def __init__(self, name="undefined"):
         self.name = name
         self.types =[]
@@ -52,7 +52,7 @@ class ideology():
 
             if value.tag == "rules":
                 for rule in value.values:
-                    export_obj.rules.append(modifier(rule.tag, rule.values[0]))
+                    export_obj.rules.append(ideology_modifier(rule.tag, rule.values[0]))
 
             if value.tag == "can_host_government_in_exile" and value.values[0] == "yes":
                 export_obj.can_host_exiles == True
@@ -65,13 +65,13 @@ class ideology():
 
             if value.tag == "modifiers":
                 for substatement in value.values:
-                    export_obj.modifiers.append(modifier(substatement.tag, substatement.values[0]))
+                    export_obj.modifiers.append(ideology_modifier(substatement.tag, substatement.values[0]))
 
             if value.tag == "faction_modifiers":
                 if len(value.values) > 0:
                     for substatement in value.values:
                         if type(substatement) == statement:
-                            export_obj.faction_modifiers.append(modifier(substatement.tag, substatement.values[0]))
+                            export_obj.faction_modifiers.append(ideology_modifier(substatement.tag, substatement.values[0]))
 
             if value.tag[:2] == "ai":
                 export_obj.ai_type = value.tag
@@ -80,11 +80,11 @@ class ideology():
 
 
 
-class ideology_sub_type():
+class ideology_sub_type(game_object):
     def __init__(self, name):
         self.name = name
 
-class modifier():
+class ideology_modifier(game_object):
     def __init__(self, itag, ivalue):
         self.tag = itag
         self.value = ivalue

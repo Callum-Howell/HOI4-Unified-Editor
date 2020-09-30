@@ -6,7 +6,7 @@ from hoi4parser import *
 
 ###classes
 
-class event_file():
+class event_file(game_object):
     def __init__(self, name="Unnamed"):
         self.name = name
 
@@ -64,7 +64,7 @@ class event_file():
 
         return export_object
 
-class event():
+class event(game_object):
     def __init__(self):
         self.eventtype = "Undefined"
         self.rawtext = ""
@@ -211,7 +211,7 @@ class event():
         self.create_raw_text()
         return self.rawtext
 
-class option():
+class option(game_object):
     def __init__(self, name="", ai_chance=[],effects=[],empty_hidden=False,original_recipient_only=False):
         self.name = name
         self.ai_chance = ai_chance
@@ -285,7 +285,7 @@ class option():
 
 
 
-class event_description():
+class event_description(game_object):
     def __init__(self, text="not specified", trigger_list=[]):
         self.text = text
         self.trigger_list = trigger_list
@@ -328,7 +328,7 @@ class event_description():
 
 
 
-class title():
+class title(game_object):
     def __init__(self, text="not specified", trigger_list=[]):
         self.text = text
         self.trigger_list = trigger_list
@@ -370,7 +370,7 @@ class title():
         return export_obj
 
 
-class mean_time_to_happen:
+class mean_time_to_happen(game_object):
     def __init__(self, base=0, modifier_list=[]):
         self.base = base
         self.modifiers = modifier_list
@@ -410,7 +410,7 @@ class mean_time_to_happen:
         return export_obj
 
 
-class mtth_modifier:
+class mtth_modifier(game_object):
     def __init__(self, factor=0, trigger_list=[]):
         self.factor = factor
         self.trigger_list = trigger_list

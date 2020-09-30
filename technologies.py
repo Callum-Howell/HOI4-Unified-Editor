@@ -1,5 +1,5 @@
 
-class technology_file:
+class technology_file(game_object):
     def __init__(self):
         pass
 
@@ -8,7 +8,7 @@ class technology_file:
         pass
 
 
-class technology:
+class technology(game_object):
     def __init__(self):
         pass
 

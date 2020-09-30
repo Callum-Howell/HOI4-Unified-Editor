@@ -1,6 +1,6 @@
 from hoi4parser import *
 
-class country():
+class country(game_object):
     def __init__(self):
         self.tag = "Undefined"
 
@@ -36,19 +36,19 @@ class country():
 
 
 
-class countrypolitics():
+class countrypolitics(game_object):
     def __init__(self):
         self.rulingparty = None
         self.lastelection = None
         self.election_frequency = None
         self.elections_allowed = None
 
-class country_leader():
+class country_leader(game_object):
     def __init__(self):
         pass
 
 
-class army_leader():
+class army_leader(game_object):
     def __init__(self, rank=[]):
         self.rank = rank
 

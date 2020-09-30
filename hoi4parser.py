@@ -183,14 +183,14 @@ def nestify(blocklist):
     return nestedlist
 
 class game_object:
-    """Generic object that represents any structure found within the mod/game files. Used to implement common processes"""
+    """Generic object that represents any structure found within the game files. Used to implement common processes such as loading to and from the database."""
     def __init__(self):
         pass
 
     def export(self):
         pass
 
-class scope_template():
+class scope_template(game_object):
     def __init__(self, name, description, examplestring, trigger, effect, fromscope, toscope, version, hidden=False):
         self.name = name
         self.description = description
@@ -209,7 +209,7 @@ class scope_template():
         self.hidden= hidden
 
 
-class command_template():
+class command_template(game_object):
     def __init__(self, name, parameters, example, description, notes, version, scope):
         self.name = name
         self.parameters = parameters
@@ -220,7 +220,7 @@ class command_template():
         self.scope = scope
 
 
-class trigger_template():
+class trigger_template(game_object):
     def __init__(self, name, parameters, example, description, notes, version, scope):
         self.name = name
         self.parameters = []
@@ -254,7 +254,7 @@ class trigger_template():
 
             parameter = parameter.replace("!", "")
             split_param = parameter.split(".")
-            print(parameter, split_param)
+#            print(parameter, split_param)
 
             if len(split_param) == 0:
                 self.parameters.append(trigger_param(parameter, param_plural, param_comparable, param_indented, param_optional))
@@ -267,7 +267,7 @@ class trigger_template():
         self.version = version
         self.scope = scope
 
-class trigger_param:
+class trigger_param(game_object):
     def __init__(self, type, plural, comparable, indented, optional, descriptor=None):
         self.descriptor = descriptor
         self.plural = plural
@@ -288,7 +288,7 @@ class trigger_param:
             pass
 
 
-class modifier_template():
+class modifier_template(game_object):
     def __init__(self, name, effect, example, modifier_type, usage):
         self.name = name
         self.effect = effect
@@ -297,7 +297,7 @@ class modifier_template():
         self.usage = usage
 
 
-class nestable():
+class nestable(game_object):
     def __init__(self, tag="FAILURE", evaluator="=", values=[], hidden=False):
         self.tag = tag
         self.values = values
@@ -325,7 +325,7 @@ class nestable():
             exp_object = random_list()
         else:
             exp_object = nestable("", [], "=")
-            print(f"UNCLASSIFIED, {inputstatement.tag}, [{inputstatement.values}]")
+#            print(f"UNCLASSIFIED, {inputstatement.tag}, [{inputstatement.values}]")
 
         exp_object.tag = inputstatement.tag
         exp_object.values = []

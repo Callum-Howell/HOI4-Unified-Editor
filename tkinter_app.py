@@ -544,12 +544,17 @@ class ui_mapper:
     def __init__(self, object):
         """Takes an existing python object and creates a mirrored version with Tkinter variables for its attributes.
 
-            Ints, Booleans, and Strings are represented with TkinterVars.
+            Ints, Floats, Booleans, and Strings are represented with TkinterVars.
+
+            Lists are kept, with contained objects converted.
 
             For all other classes, a sub-ui_mapper is created.
         """
+
+
         self.obj_type = type(object)
         self.attribute_mapper = {}
+        print(object)
 
         for attribute_key, attribute_value in vars(object).items():
             if attribute_value is None:
@@ -566,6 +571,10 @@ class ui_mapper:
                 self.attribute_mapper[attribute_key] = tkinter.StringVar()
                 self.attribute_mapper[attribute_key].set(attribute_value)
 
+            elif type(attribute_value) is float:
+                self.attribute_mapper[attribute_key] = tkinter.DoubleVar()
+                self.attribute_mapper[attribute_key].set(attribute_value)
+
             elif type(attribute_value) is statement:
                 print(attribute_key, attribute_value)
                 raise exceptions.StatementError
@@ -577,12 +586,17 @@ class ui_mapper:
                         input_list.append(list_variable)
                     elif list_variable is None:
                         pass
-                    else:
+                    elif issubclass(type(list_variable), game_object):
                         input_list.append(ui_mapper(list_variable))
+                    else:
+                        pass
                 self.attribute_mapper[attribute_key] = input_list
 
-            else:
+            elif issubclass(type(attribute_value), game_object):
                 self.attribute_mapper[attribute_key] = ui_mapper(attribute_value)
+
+            else:
+                pass
 
     def __getitem__(self, item):
         selection = self.attribute_mapper[item]
@@ -592,7 +606,7 @@ class ui_mapper:
             return self.attribute_mapper[item]
 
 
-    def create_new_object(self):
+    def create_new_object(self): 
         """Returns an object with the attributes that now exist"""
 
         export_object = self.obj_type()
