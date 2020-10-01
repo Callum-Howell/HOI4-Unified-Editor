@@ -4,6 +4,7 @@ import os
 from PIL import Image, ImageTk
 from mod import *
 import exceptions
+import sqlite3
 
 # Classes
 
@@ -15,21 +16,21 @@ class app:
     def filelocater(self):
         self.filelocaterframe = tkinter.Frame(self.master)
         self.filelocaterframe.grid()
-
         loc_label = tkinter.Label(self.filelocaterframe, text="File Location:")
         loc_label.grid(row=0, column=0)
         self.loc_string = tkinter.StringVar()
         loc_input = tkinter.Entry(self.filelocaterframe, textvariable=self.loc_string, width=100)
         loc_input.insert(0, "C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV")
         loc_input.grid(row=0, column=1)
-        execute_button = tkinter.Button(self.filelocaterframe, text="Load Mod", command=self.loadmod)
+        execute_button = tkinter.Button(self.filelocaterframe, text="Load Mod", command=self.load_from_base_files)
         execute_button.grid(row=0, column=2)
 
-    def loadmod(self):
+    def load_from_base_files(self):
         filelocation = self.loc_string.get()
         self.filelocaterframe.destroy()
         self.progbar = tkinter.ttk.Progressbar(self.master, mode="indeterminate")
         self.progbar.grid()
+
         self.mod = mod_file(filelocation)
         self.progbar.destroy()
         self.mainwindow = tkinter.Frame(self.master)
@@ -554,7 +555,7 @@ class ui_mapper:
 
         self.obj_type = type(object)
         self.attribute_mapper = {}
-        print(object)
+#        print(object)
 
         for attribute_key, attribute_value in vars(object).items():
             if attribute_value is None:
@@ -570,6 +571,7 @@ class ui_mapper:
             elif type(attribute_value) is str:
                 self.attribute_mapper[attribute_key] = tkinter.StringVar()
                 self.attribute_mapper[attribute_key].set(attribute_value)
+                self.attribute_mapper[attribute_key].trace_add("write", null)
 
             elif type(attribute_value) is float:
                 self.attribute_mapper[attribute_key] = tkinter.DoubleVar()
@@ -627,6 +629,9 @@ class ui_mapper:
                 setattr(export_object, attribute[0], attribute[1])
 
         return export_object
+
+def null(var, index, mode):
+    print(var, mode)
 
 def obj_check(a, c):
     for aval, cval in zip(vars(a), vars(c)):

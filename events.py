@@ -8,7 +8,7 @@ from hoi4parser import *
 
 class event_file(game_object):
     def __init__(self, name="Unnamed"):
-        self.name = name
+        self.file_name = name
 
         self.name_spaces = []
         self.event_list = []
@@ -18,10 +18,10 @@ class event_file(game_object):
         return len(self.event_list)
 
     def __repr__(self):
-        return "[event_file]" + self.name + "[\\event_file]"
+        return "[event_file]" + self.file_name + "[\\event_file]"
 
     def __str__(self):
-        return self.name
+        return self.file_name
 
     def __iter__(self):
         for event in self.event_list:
@@ -37,7 +37,7 @@ class event_file(game_object):
 
     def export(self):
         exportstr = ""
-        exportstr += "#" + self.name[:-4] + "\n\n"
+        exportstr += "#" + self.file_name[:-4] + "\n\n"
 
         for name_space in self.name_spaces:
             exportstr += "add_namespace = " + name_space + "\n"
@@ -52,7 +52,7 @@ class event_file(game_object):
     def parse(event_txt_file, filename):
         export_object = event_file()
 
-        export_object.name = filename
+        export_object.file_name = filename
         parsed_file = parsingfile(event_txt_file)
         export_object.name_spaces = []
         export_object.event_list = []

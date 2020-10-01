@@ -1,19 +1,21 @@
 from events import *
 import os
+from events import *
 from localisation import *
 from ideologies import *
 from countries import *
 
-class mod_file:
+class mod_file(game_object):
     def __init__(self, directory):
         self.directory = directory
+
         self.event_files_dict = {}
         self.ideology_dict = {}
         self.country_dict = {}
 
         self.ideology_load()
-
         self.countryload()
+
 
         for eventfileloc in os.listdir(directory + "\events\\"):
             fileloc = directory + "\events" + "\\" + eventfileloc
@@ -21,7 +23,9 @@ class mod_file:
             rawfilestring = opener.read()
 
             temp_file = event_file.parse(rawfilestring, eventfileloc)
-            self.event_files_dict[temp_file.name] = temp_file
+            self.event_files_dict[temp_file.file_name] = temp_file
+
+
 
         self.locfileslist = []
         for locfileloc in os.listdir(directory + "\localisation\\"):
@@ -50,6 +54,7 @@ class mod_file:
                     parsedideologies = ideologyfile.parse(rawfilestring)
                     for loaded_ideology in parsedideologies.ideologies:
                         self.ideology_dict[loaded_ideology.name] = loaded_ideology
+
 
     def countryload(self):
         tagloc = self.directory + "\common\country_tags\\"

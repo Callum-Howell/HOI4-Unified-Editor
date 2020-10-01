@@ -187,8 +187,52 @@ class game_object:
     def __init__(self):
         pass
 
-    def export(self):
-        pass
+    # def sql_create_table(self, cursor, table_name):
+    #
+    #     headings = """"""
+    #     for attribute, value in vars(self).items():
+    #         if len(headings) == 0:
+    #             headings += attribute
+    #         else:
+    #             headings += f", {attribute}"
+    #
+    #         if type(value) == int:
+    #             headings += f" INT"
+    #         if type(value) == float:
+    #             headings += f" REAL"
+    #         if type(value) == str:
+    #             headings += f" TEXT"
+    #         else:
+    #             headings += f" BLOB"
+    #
+    #     sqlCommand = f"CREATE TABLE {table_name} ( {headings} )"
+    #     print(sqlCommand)
+    #
+    #     cursor.execute(sqlCommand)
+    #
+    # def sql_create(self, cursor, table_name):
+    #     values = """"""
+    #     for attribute, value in vars(self).items():
+    #         if len(values) == 0:
+    #             values += attribute
+    #         else:
+    #             values += f", {attribute}"
+    #
+    #     sqlCommand = f"INSERT INTO {table_name} VALUES ( {values} )"
+    #     print(sqlCommand)
+    #
+    #     cursor.execute(sqlCommand)
+    #
+    #
+    # def sql_update(self, cursor):
+    #
+    #     for attribute, value in vars(self):
+    #         pass
+    #
+    #
+    # @staticmethod
+    # def sql_load():
+    #     pass
 
 class scope_template(game_object):
     def __init__(self, name, description, examplestring, trigger, effect, fromscope, toscope, version, hidden=False):

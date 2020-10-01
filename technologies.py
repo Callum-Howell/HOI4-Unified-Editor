@@ -1,3 +1,4 @@
+from hoi4parser import *
 
 class technology_file(game_object):
     def __init__(self):
